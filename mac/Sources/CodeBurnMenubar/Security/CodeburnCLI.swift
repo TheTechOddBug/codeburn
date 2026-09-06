@@ -20,7 +20,7 @@ enum CodeburnCLI {
     ) -> [String] {
         let home = homeDirectory
         var paths: [String] = []
-        for dir in ["\(home)/.volta/bin", "\(home)/.npm-global/bin", "\(home)/.asdf/shims"] {
+        for dir in ["\(home)/.volta/bin", "\(home)/.npm-global/bin", "\(home)/.local/bin", "\(home)/.asdf/shims"] {
             paths.append(dir)
         }
         // `mise use -g npm:codeburn` installs the CLI under its npm backend, but
@@ -43,6 +43,32 @@ enum CodeburnCLI {
                 }
             }
         }
+        paths.append(contentsOf: nixPaths(homeDirectory: home))
+        return paths
+    }
+
+    /// Nix keeps Node outside every location above. nix-darwin exposes the per-user profile at
+    /// `/etc/profiles/per-user/$USER/bin` and the system profile at `/run/current-system/sw/bin`;
+    /// standalone `nix profile` uses `~/.nix-profile/bin`, which on the XDG state layout resolves
+    /// through `~/.local/state/nix/profiles/profile/bin`.
+    ///
+    /// These matter because a macOS system update clears `launchctl config user path`, the only
+    /// mechanism that put those directories on a GUI-launched app's PATH. After the update the
+    /// app inherits the bare `/usr/bin:/bin:/usr/sbin:/sbin`, so the CLI's `#!/usr/bin/env node`
+    /// shim can no longer resolve `node` and every spawn dies with exit 127. Naming the
+    /// directories here keeps the app working without any machine-level launchd configuration.
+    private static func nixPaths(homeDirectory: String) -> [String] {
+        var paths: [String] = []
+        let user = (homeDirectory as NSString).lastPathComponent
+        if !user.isEmpty {
+            paths.append("/etc/profiles/per-user/\(user)/bin")
+        }
+        paths.append(contentsOf: [
+            "\(homeDirectory)/.nix-profile/bin",
+            "\(homeDirectory)/.local/state/nix/profiles/profile/bin",
+            "/run/current-system/sw/bin",
+            "/nix/var/nix/profiles/default/bin",
+        ])
         return paths
     }
     private static let persistedPathFilename = "codeburn-cli-path.v1"
