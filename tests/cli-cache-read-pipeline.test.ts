@@ -2,7 +2,7 @@ import { mkdir, rm, writeFile } from 'node:fs/promises'
 import { mkdtemp } from 'node:fs/promises'
 import { spawnSync } from 'node:child_process'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { delimiter as pathDelimiter, join } from 'node:path'
 
 import { describe, expect, it } from 'vitest'
 
@@ -235,7 +235,7 @@ describe('status menubar cache-read pipeline', () => {
     })
     const sourceEnv = {
       CLAUDE_CONFIG_DIR: '',
-      CLAUDE_CONFIG_DIRS: `${work}:${personal}`,
+      CLAUDE_CONFIG_DIRS: [work, personal].join(pathDelimiter),
     }
 
     try {
