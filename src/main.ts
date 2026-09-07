@@ -9,7 +9,8 @@ import { getProvider } from './providers/index.js'
 import { getClaudeConfigDirs, getDesktopSessionsDirs } from './providers/claude.js'
 import { convertCost, formatCost } from './currency.js'
 import { renderStatusBar } from './format.js'
-import { DAILY_CACHE_VERSION, toDateString } from './daily-cache.js'
+import { toDateString } from './daily-cache.js'
+import { statusSnapshotSemanticKey } from './status-snapshot-semantic.js'
 import { dateKey } from './day-aggregator.js'
 import { sessionModelBillableOutputTokens } from './session-output.js'
 import { isBehavioralCall } from './behavioral-weight.js'
@@ -52,14 +53,10 @@ import { createRequire } from 'node:module'
 
 const require = createRequire(import.meta.url)
 const { version } = require('../package.json')
-// Bump when the menubar payload's rendering semantics change without a package
-// release or daily-cache version change. The envelope version in session-cache
-// protects record shape; this protects the meaning of an otherwise valid one.
-// v5: providerDetails carries per-provider tokens and sessions, which a v4
-// record predates — the dock glance would read a provider as having no token
-// breakdown purely because the snapshot was written before this build.
-const STATUS_SNAPSHOT_RENDER_VERSION = 5
-const STATUS_SNAPSHOT_SEMANTIC_KEY = `${version}:render-${STATUS_SNAPSHOT_RENDER_VERSION}:daily-${DAILY_CACHE_VERSION}`
+// The snapshot semantic revision + key live in their own module so the CLI's
+// snapshot read/write path and its regression tests agree on the same value
+// without importing the CLI entry point (which parses argv as a side effect).
+const STATUS_SNAPSHOT_SEMANTIC_KEY = statusSnapshotSemanticKey(version)
 import { loadCurrency, getCurrency, isValidCurrencyCode } from './currency.js'
 import { CodexThroughputReader, newestCodexSession, renderCodexThroughput } from './codex-throughput.js'
 

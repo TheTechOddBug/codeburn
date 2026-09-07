@@ -31,6 +31,12 @@ export type ProviderSliceTotal = {
   inputTokens?: number
   outputTokens?: number
   sessions?: number
+  cacheReadTokens?: number
+  /// True when at least one active day slice in this fold carried no
+  /// per-provider cache accounting (a day finalized before the field existed).
+  /// The caller uses it to keep the period total UNKNOWN rather than a partial
+  /// known sum: an incomplete total must not masquerade as a complete one.
+  cacheReadIncomplete?: boolean
 }
 
 /// Folds one day's provider slice into the period total. Tokens and sessions are
@@ -45,6 +51,15 @@ export function addProviderSlice(totals: Record<string, ProviderSliceTotal>, nam
   if (slice.inputTokens !== undefined) total.inputTokens = (total.inputTokens ?? 0) + slice.inputTokens
   if (slice.outputTokens !== undefined) total.outputTokens = (total.outputTokens ?? 0) + slice.outputTokens
   if (slice.sessions !== undefined) total.sessions = (total.sessions ?? 0) + slice.sessions
+  if (slice.cacheReadTokens !== undefined) {
+    total.cacheReadTokens = (total.cacheReadTokens ?? 0) + slice.cacheReadTokens
+  } else if (providerSliceHasUsage(slice)) {
+    // An active day recorded before per-provider cache accounting has no
+    // cache read to contribute; an idle day (no usage) is a genuine zero and
+    // leaves the total alone. Marking incomplete here lets the consumer drop
+    // the partial sum rather than label it complete.
+    total.cacheReadIncomplete = true
+  }
   totals[name] = total
 }
 
@@ -57,6 +72,37 @@ export function providerSliceHasUsage(slice: ProviderDaySlice): boolean {
     || (slice.outputTokens ?? 0) > 0
     || (slice.cacheReadTokens ?? 0) > 0
     || (slice.cacheWriteTokens ?? 0) > 0
+}
+
+/// Preserve the optional cache-read contract when a provider-scoped durable
+/// query projects a day down to one provider. `sliceDayToProvider` keeps the
+/// original provider slice under `day.providers`, while the day-level numeric
+/// fields use zero-compatible legacy defaults for the older aggregates. The
+/// provider detail must inspect that slice directly or an active legacy row
+/// with no cache field would become a fabricated known zero.
+function cacheReadForProviderDays(days: DailyEntry[], provider: string): Pick<ProviderSliceTotal, 'cacheReadTokens' | 'cacheReadIncomplete'> {
+  let cacheReadTokens = 0
+  let hasCacheReadValue = false
+  let cacheReadIncomplete = false
+  for (const day of days) {
+    const slice = day.providers[provider]
+    if (!slice) continue
+    // An explicit zero is a real known value even when the rest of the slice
+    // is idle (for example, a configured provider with a finalized zero row).
+    // Check field presence before the activity predicate so scoped queries do
+    // not turn that contract value into unknown.
+    if (slice.cacheReadTokens !== undefined) {
+      cacheReadTokens += slice.cacheReadTokens
+      hasCacheReadValue = true
+      continue
+    }
+    if (!providerSliceHasUsage(slice)) continue
+    cacheReadIncomplete = true
+  }
+  return {
+    ...(hasCacheReadValue ? { cacheReadTokens } : {}),
+    ...(cacheReadIncomplete ? { cacheReadIncomplete: true } : {}),
+  }
 }
 
 
@@ -921,6 +967,7 @@ export async function buildMenubarPayloadForRange(periodInfo: PeriodInfo, opts: 
       if (sources.length > 0) providers.push({ name: p.name, displayName: p.displayName, cost: 0, calls: 0, hasUsage: false })
     }
   } else {
+    const providerCacheRead = cacheReadForProviderDays(cacheDaysForPeriod ?? [], pf)
     providers.push({
       name: pf,
       displayName: displayNameByName.get(pf) ?? pf,
@@ -931,6 +978,7 @@ export async function buildMenubarPayloadForRange(periodInfo: PeriodInfo, opts: 
       inputTokens: currentData.inputTokens,
       outputTokens: currentData.outputTokens,
       sessions: currentData.sessions,
+      ...providerCacheRead,
       hasUsage: currentData.cost > 0
         || currentData.savingsUSD > 0
         || currentData.calls > 0

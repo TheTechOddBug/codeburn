@@ -378,6 +378,11 @@ struct ProviderDetail: Codable, Sendable {
     let inputTokens: Int?
     let outputTokens: Int?
     let sessions: Int?
+    /// Input tokens re-served from the provider's prompt cache for the period,
+    /// accounted separately from `inputTokens` and priced at the cache-read
+    /// rate inside `cost`. Nil on CLIs that predate per-provider cache
+    /// accounting: absent means unknown, never a fabricated zero.
+    let cacheReadTokens: Int?
 
     init(
         id: String,
@@ -387,7 +392,8 @@ struct ProviderDetail: Codable, Sendable {
         hasUsage: Bool,
         inputTokens: Int? = nil,
         outputTokens: Int? = nil,
-        sessions: Int? = nil
+        sessions: Int? = nil,
+        cacheReadTokens: Int? = nil
     ) {
         self.id = id
         self.label = label
@@ -397,10 +403,11 @@ struct ProviderDetail: Codable, Sendable {
         self.inputTokens = inputTokens
         self.outputTokens = outputTokens
         self.sessions = sessions
+        self.cacheReadTokens = cacheReadTokens
     }
 
     private enum CodingKeys: String, CodingKey {
-        case id, label, cost, calls, hasUsage, inputTokens, outputTokens, sessions
+        case id, label, cost, calls, hasUsage, inputTokens, outputTokens, sessions, cacheReadTokens
     }
 
     init(from decoder: Decoder) throws {
@@ -419,6 +426,7 @@ struct ProviderDetail: Codable, Sendable {
         inputTokens = try c.decodeIfPresent(Int.self, forKey: .inputTokens)
         outputTokens = try c.decodeIfPresent(Int.self, forKey: .outputTokens)
         sessions = try c.decodeIfPresent(Int.self, forKey: .sessions)
+        cacheReadTokens = try c.decodeIfPresent(Int.self, forKey: .cacheReadTokens)
     }
 }
 
