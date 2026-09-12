@@ -47,6 +47,8 @@ const CHANNELS = [
   'codeburn:getCompare',
   'codeburn:getPeriodCompare',
   'codeburn:getPeriodCompareSessions',
+  'codeburn:getCompareCohortModels',
+  'codeburn:getCompareCohort',
   'codeburn:getYield',
   'codeburn:getSpendFlow',
   'codeburn:getBranchSpend',
@@ -114,6 +116,9 @@ const ARGV_CASES: Array<{ channel: string; args: unknown[]; argv: string[] }> = 
   // Claude sanitizes project paths to dash-leading slugs; the key rides in the
   // VALUE position of --key, so a dash-leading key must survive validation.
   { channel: 'codeburn:getPeriodCompareSessions', args: [{ from: '2026-07-01', to: '2026-07-07' }, { from: '2026-07-08', to: '2026-07-14' }, 'all', 'project', '-work-pricing'], argv: ['compare-periods', '--format', 'sessions', '--from-a', '2026-07-01', '--to-a', '2026-07-07', '--from-b', '2026-07-08', '--to-b', '2026-07-14', '--dimension', 'project', '--key', '-work-pricing'] },
+  { channel: 'codeburn:getCompareCohortModels', args: ['month', 'claude', { from: '2026-07-01', to: '2026-07-11' }], argv: ['compare', '--format', 'cohort-json', '--period', 'month', '--provider', 'claude', '--from', '2026-07-01', '--to', '2026-07-11'] },
+  { channel: 'codeburn:getCompareCohort', args: ['month', 'all', 'model-a', 'model-b'], argv: ['compare', '--format', 'cohort-json', '--period', 'month', '--model-a', 'model-a', '--model-b', 'model-b'] },
+  { channel: 'codeburn:getCompareCohort', args: ['month', 'all', 'model-a', 'model-b', undefined, ['/Users/gone/alpha', 'loose-word'], 'coding'], argv: ['compare', '--format', 'cohort-json', '--period', 'month', '--model-a', 'model-a', '--model-b', 'model-b', '--project', '/Users/gone/alpha', '--project', 'loose-word', '--category', 'coding'] },
   { channel: 'codeburn:getYield', args: ['today', 'all'], argv: ['yield', '--format', 'json', '--period', 'today'] },
   { channel: 'codeburn:getYield', args: ['today', 'claude'], argv: ['yield', '--format', 'json', '--period', 'today', '--provider', 'claude'] },
   { channel: 'codeburn:getSpendFlow', args: ['month', 'openai'], argv: ['spend', '--format', 'flow-json', '--period', 'month', '--provider', 'openai'] },
@@ -261,6 +266,9 @@ describe('createBridgeHandlers (IPC input validation)', () => {
     { name: 'device name that looks like a flag', channel: 'codeburn:removeDevice', args: ['-rf'] },
     { name: 'relative export path', channel: 'codeburn:exportData', args: ['json', 'all', 'relative/out'] },
     { name: 'compare model that looks like a flag', channel: 'codeburn:getCompare', args: ['month', 'all', '-a', 'model-b'] },
+    { name: 'cohort model that looks like a flag', channel: 'codeburn:getCompareCohort', args: ['month', 'all', '-a', 'model-b'] },
+    { name: 'cohort project pattern that looks like a flag', channel: 'codeburn:getCompareCohort', args: ['month', 'all', 'model-a', 'model-b', undefined, ['-rf']] },
+    { name: 'unknown cohort category', channel: 'codeburn:getCompareCohort', args: ['month', 'all', 'model-a', 'model-b', undefined, undefined, 'not-a-category'] },
     { name: 'price override model that looks like a flag', channel: 'codeburn:setPriceOverride', args: ['-x', { input: 1, output: 2 }] },
     { name: 'non-positive price override rate', channel: 'codeburn:setPriceOverride', args: ['my-model', { input: 0, output: 2 }] },
     { name: 'non-finite price override rate', channel: 'codeburn:setPriceOverride', args: ['my-model', { input: 1, output: Number.POSITIVE_INFINITY }] },
