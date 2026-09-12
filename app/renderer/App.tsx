@@ -19,6 +19,8 @@ import { formatCompact, formatUsd, setActiveCurrency } from './lib/format'
 import {
   EMPTY_FILTERS,
   filtersActive,
+  modelFilters,
+  projectFilters,
   unionFilters,
   type InvestigationFilters,
 } from './lib/investigation'
@@ -730,13 +732,19 @@ function AppMain() {
     trackEvent('section_view', { section: next })
   }, [commitNav])
 
-  // Navigation adapter for Compare periods' contribution drill-down (until the
-  // goal-8 navigation lands): opens the existing Sessions section scoped to the
-  // requested range via the app's own custom-range state.
-  const inspectRange = useCallback((range: DateRange) => {
-    setCustomRange(range)
-    navigate('sessions')
-  }, [navigate])
+  /** Compare periods' contribution drill-down: the same Sessions destination
+   *  every other drill-through lands on, scoped to the clicked side's range
+   *  and filtered to the contribution's own key. Not a union: the range moves,
+   *  so any previous selection no longer describes this population. */
+  const inspectContribution = useCallback((range: DateRange, dimension: 'project' | 'model', key: string) => {
+    commitNav({
+      section: 'sessions',
+      range,
+      filters: dimension === 'project' ? projectFilters(key) : modelFilters([key]),
+      sessionId: null,
+      visibleCount: INITIAL_VISIBLE,
+    })
+  }, [commitNav])
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -937,7 +945,7 @@ function AppMain() {
               ) : section === 'compare' ? (
                 <Compare period={period} provider={provider} range={customRange} refreshToken={refreshToken} ready={ready} />
               ) : section === 'periods' ? (
-                <PeriodCompare provider={provider} refreshToken={refreshToken} ready={ready} onInspectRange={inspectRange} />
+                <PeriodCompare provider={provider} refreshToken={refreshToken} ready={ready} onInspectContribution={inspectContribution} />
               ) : (
                 <SectionPlaceholder title={SECTION_TITLES[section]} />
               )}

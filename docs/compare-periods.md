@@ -47,7 +47,9 @@ the total difference. Never add the lenses together.
   in A and in B. A session that straddles the boundary appears once, with the
   part of its activity that falls inside each range — attribution follows each
   API call's own timestamp, not the session's start date.
-- **Open A / B in Sessions** jumps to the Sessions screen scoped to that range.
+- **Open A / B in Sessions** jumps to the Sessions screen scoped to that range
+  and filtered to that contribution's project or model, so the drill-through
+  lands on exactly the population the row describes.
 - The **Raw / Per day / Per 100 calls** switch rescales the lens. Per-100-calls
   recomputes honestly: a period with zero calls has *no* cost per call (shown
   as `—`), and a period that spent more in total but less per call shows as a
@@ -60,7 +62,11 @@ the total difference. Never add the lenses together.
 - **Aggregate history without session detail**: when a day's session sources
   have aged off disk, its cost survives only in the durable daily history.
   Those days are listed here with their unexplained amount and are *not*
-  folded into the totals or the lenses.
+  folded into the totals or the lenses. The Totals card says so inline when
+  either range has such a day, because on a machine with aged-off history the
+  detail-only total can be far below what `codeburn report` shows for the same
+  range (`report` and `status` read the durable daily history; `compare-periods`
+  matches `sessions`, `models` and `spend`, which read session transcripts).
 
 Every difference is a deterministic calculation over the full population of
 both ranges (not a top-N sample). Nothing is AI-generated: a rise or drop can

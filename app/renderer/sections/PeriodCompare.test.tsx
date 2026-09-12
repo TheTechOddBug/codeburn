@@ -152,16 +152,16 @@ describe('PeriodCompare', () => {
     expect(screen.getByText('long run')).toBeInTheDocument()
   })
 
-  it('drills into sessions and hands the requested range to the navigation adapter', async () => {
+  it('drills into sessions with the clicked side\'s range AND the contribution key', async () => {
     const user = userEvent.setup()
-    const onInspectRange = vi.fn()
-    render(<PeriodCompare provider="all" onInspectRange={onInspectRange} />)
+    const onInspectContribution = vi.fn()
+    render(<PeriodCompare provider="all" onInspectContribution={onInspectContribution} />)
     await user.click(await screen.findByRole('button', { name: /\/work\/eff/ }))
     const drill = await screen.findByLabelText('Sessions behind /work/eff')
     await user.click(within(drill).getByRole('button', { name: 'Open A in Sessions →' }))
-    expect(onInspectRange).toHaveBeenCalledWith(RANGE_A)
+    expect(onInspectContribution).toHaveBeenCalledWith(RANGE_A, 'project', '/work/eff')
     await user.click(within(drill).getByRole('button', { name: 'Open B in Sessions →' }))
-    expect(onInspectRange).toHaveBeenCalledWith(RANGE_B)
+    expect(onInspectContribution).toHaveBeenCalledWith(RANGE_B, 'project', '/work/eff')
   })
 
   it('per-100-calls view recomputes honestly: cheaper per call is Down, zero calls is —', async () => {

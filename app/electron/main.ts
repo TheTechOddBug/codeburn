@@ -587,6 +587,7 @@ export function createBridgeHandlers(deps: Deps = { spawnCli, spawnCliAction, re
       '--from-a', vRequiredRange(rangeA, 'A').from, '--to-a', vRequiredRange(rangeA, 'A').to,
       '--from-b', vRequiredRange(rangeB, 'B').from, '--to-b', vRequiredRange(rangeB, 'B').to,
       ...providerArgs(vProvider(provider)),
+      ...projectArgs(),
     ], 3),
     'codeburn:getPeriodCompareSessions': run((rangeA: DateRange, rangeB: DateRange, provider: string, dimension: string, key: string) => {
       if (dimension !== 'project' && dimension !== 'model') throw new CliError('bad-args', 'invalid drill-down dimension')
@@ -595,6 +596,7 @@ export function createBridgeHandlers(deps: Deps = { spawnCli, spawnCliAction, re
         '--from-a', vRequiredRange(rangeA, 'A').from, '--to-a', vRequiredRange(rangeA, 'A').to,
         '--from-b', vRequiredRange(rangeB, 'B').from, '--to-b', vRequiredRange(rangeB, 'B').to,
         ...providerArgs(vProvider(provider)),
+        ...projectArgs(),
         '--dimension', dimension, '--key', vContributionKey(key),
       ]
     }),

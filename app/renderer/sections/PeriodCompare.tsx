@@ -116,14 +116,14 @@ export function PeriodCompare({
   provider,
   refreshToken = 0,
   ready = true,
-  onInspectRange,
+  onInspectContribution,
 }: {
   provider: string
   refreshToken?: number
   ready?: boolean
   /** Navigation adapter (until the goal-8 navigation lands): open the existing
    *  Sessions section scoped to one of the compared ranges. */
-  onInspectRange?: (range: DateRange) => void
+  onInspectContribution?: (range: DateRange, dimension: 'project' | 'model', key: string) => void
 }) {
   const saved = useMemo(readPersisted, [])
   const defaults = useMemo(() => defaultSevenRanges(), [])
@@ -206,7 +206,7 @@ export function PeriodCompare({
                 onView={setView}
                 drill={drill}
                 onDrill={setDrill}
-                onInspectRange={onInspectRange}
+                onInspectContribution={onInspectContribution}
                 provider={provider}
                 refreshToken={refreshToken}
               />
@@ -309,9 +309,21 @@ function TotalsCard({ report }: { report: PeriodDiffReport }) {
     if (label.includes('tokens')) return formatCompact(value)
     return value.toLocaleString('en-US')
   }
+  // A range whose sources aged off disk is explained by the durable daily
+  // history alone, which carries no session detail. That cost is real and it is
+  // NOT in these totals, so say so where the totals are read — not only in the
+  // Coverage card at the bottom of the page.
+  const carriedA = report.history?.aggregateOnly.A ?? 0
+  const carriedB = report.history?.aggregateOnly.B ?? 0
   return (
     <div className="panel cmp-card">
       <div className="cmp-head"><h3>Totals</h3><span className="cmp-head-note">B − A · API-equivalent cost is not a subscription bill</span></div>
+      {(carriedA > 0 || carriedB > 0) && (
+        <p className="pcmp-caption">
+          Session detail only. A further {formatUsd(carriedA)} (A) and {formatUsd(carriedB)} (B) of daily history
+          has no session detail behind it and is NOT in these totals — see Coverage &amp; basis.
+        </p>
+      )}
       <div className="pcmp-table" role="table" aria-label="Totals difference">
         <div className="pcmp-tr pcmp-th" role="row">
           <span role="columnheader">Metric</span><span role="columnheader">A</span><span role="columnheader">B</span><span role="columnheader">Diff</span><span role="columnheader">%</span>
@@ -408,7 +420,7 @@ function LensCard({
   onView,
   drill,
   onDrill,
-  onInspectRange,
+  onInspectContribution,
   provider,
   refreshToken,
 }: {
@@ -419,7 +431,7 @@ function LensCard({
   onView: (view: View) => void
   drill: { dimension: 'project' | 'model'; key: string } | null
   onDrill: (drill: { dimension: 'project' | 'model'; key: string } | null) => void
-  onInspectRange?: (range: DateRange) => void
+  onInspectContribution?: (range: DateRange, dimension: 'project' | 'model', key: string) => void
   provider: string
   refreshToken: number
 }) {
@@ -496,7 +508,7 @@ function LensCard({
           refreshToken={refreshToken}
           dimension={drill.dimension}
           drillKey={drill.key}
-          onInspectRange={onInspectRange}
+          onInspectContribution={onInspectContribution}
           onClose={() => onDrill(null)}
         />
       )}
@@ -512,7 +524,7 @@ function DrillPanel({
   refreshToken,
   dimension,
   drillKey,
-  onInspectRange,
+  onInspectContribution,
   onClose,
 }: {
   rangeA: PeriodRangeInfo
@@ -521,7 +533,7 @@ function DrillPanel({
   refreshToken: number
   dimension: 'project' | 'model'
   drillKey: string
-  onInspectRange?: (range: DateRange) => void
+  onInspectContribution?: (range: DateRange, dimension: 'project' | 'model', key: string) => void
   onClose: () => void
 }) {
   const report = usePolled<PeriodSessionDiff>(
@@ -545,8 +557,8 @@ function DrillPanel({
       <div className="pcmp-drill-head">
         <strong>{dimension === 'project' ? 'Project' : 'Model'}: {drillKey}</strong>
         <span className="pcmp-drill-actions">
-          <button type="button" className="ov-link" onClick={() => onInspectRange?.({ from: rangeA.from, to: rangeA.to })}>Open A in Sessions →</button>
-          <button type="button" className="ov-link" onClick={() => onInspectRange?.({ from: rangeB.from, to: rangeB.to })}>Open B in Sessions →</button>
+          <button type="button" className="ov-link" onClick={() => onInspectContribution?.({ from: rangeA.from, to: rangeA.to }, dimension, drillKey)}>Open A in Sessions →</button>
+          <button type="button" className="ov-link" onClick={() => onInspectContribution?.({ from: rangeB.from, to: rangeB.to }, dimension, drillKey)}>Open B in Sessions →</button>
           <button type="button" className="ov-link" onClick={onClose}>Close</button>
         </span>
       </div>

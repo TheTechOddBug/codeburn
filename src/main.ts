@@ -2320,14 +2320,16 @@ program
         process.stderr.write('codeburn compare-periods: --from-a/--to-a/--from-b/--to-b must be provided together.\n')
         process.exit(1)
       }
-      const a = parseDateRangeFlags(opts.fromA, opts.toA)
-      const b = parseDateRangeFlags(opts.fromB, opts.toB)
-      if (!a || !b) {
-        process.stderr.write('codeburn compare-periods: --from-a/--to-a/--from-b/--to-b must be valid YYYY-MM-DD dates.\n')
+      // parseDateRangeFlags THROWS on a bad date (it never returns null for a
+      // provided pair), so the same try/catch every other date-flag command
+      // uses is what turns that into one clean line instead of a stack trace.
+      try {
+        keyRangeA = parseDateRangeFlags(opts.fromA, opts.toA)!
+        keyRangeB = parseDateRangeFlags(opts.fromB, opts.toB)!
+      } catch (err) {
+        console.error(`\n  Error: ${err instanceof Error ? err.message : String(err)}\n`)
         process.exit(1)
       }
-      keyRangeA = a
-      keyRangeB = b
     } else {
       const defaults = defaultSevenDayRanges()
       keyRangeA = dayKeyToRange(defaults.A.from, defaults.A.to)
@@ -2345,10 +2347,14 @@ program
         process.exit(1)
       }
       await loadPricing()
-      const [projectsA, projectsB] = await Promise.all([
+      const [parsedSessionsA, parsedSessionsB] = await Promise.all([
         parseAllSessions(keyRangeA, opts.provider),
         parseAllSessions(keyRangeB, opts.provider),
       ])
+      // Same project filter as the report: a drill-down must never surface a
+      // session from a project the active filter hides.
+      const projectsA = filterProjectsByName(parsedSessionsA, opts.project, opts.exclude)
+      const projectsB = filterProjectsByName(parsedSessionsB, opts.project, opts.exclude)
       process.stdout.write(JSON.stringify({
         dimension,
         key: opts.key,

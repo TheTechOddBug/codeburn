@@ -160,6 +160,26 @@ describe('codeburn compare-periods (CLI)', () => {
       await writeFixture(home)
       const run = runCli(['compare-periods', '--from-a', '2026-02-31', '--to-a', '2026-03-05', '--from-b', '2026-04-16', '--to-b', '2026-04-17'], home)
       expect(run.status).not.toBe(0)
+      // One readable line, like every other date-flag command — not a stack trace.
+      expect(run.stderr).toContain('is not a real calendar date')
+      expect(run.stderr).not.toContain('at parseLocalDate')
+    } finally {
+      await rm(home, { recursive: true, force: true })
+    }
+  })
+
+  it('honours the project filter in the session drill-down, not only in the report', async () => {
+    const home = await mkdtemp(join(tmpdir(), 'codeburn-cli-periods-filter-'))
+    try {
+      await writeFixture(home)
+      const report = JSON.parse(runCli(['compare-periods', '--format', 'json', ...ARGS_A], home).stdout)
+      const key = report.projects[0].key
+      const unfiltered = runCli(['compare-periods', '--format', 'sessions', '--dimension', 'project', '--key', key, ...ARGS_A], home)
+      expect(JSON.parse(unfiltered.stdout).sessions.length).toBeGreaterThan(0)
+      // An excluded project must not surface behind a contribution either.
+      const filtered = runCli(['compare-periods', '--format', 'sessions', '--dimension', 'project', '--key', key, '--exclude', 'work', ...ARGS_A], home)
+      expect(filtered.status).toBe(0)
+      expect(JSON.parse(filtered.stdout).sessions).toEqual([])
     } finally {
       await rm(home, { recursive: true, force: true })
     }

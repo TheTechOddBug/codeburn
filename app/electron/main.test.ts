@@ -843,6 +843,14 @@ describe('project filter', () => {
       expect(calls[1]).toEqual(['sessions', '--format', 'json', '--contributions', '--period', 'week', '--project=my-company', '--exclude=scratch'])
       await handlers['codeburn:getBranchSpend']!('week', 'all')
       expect(calls[2]).toEqual(['spend', '--format', 'branch-json', '--period', 'week', '--project=my-company', '--exclude=scratch'])
+      const rangeA = { from: '2026-07-01', to: '2026-07-07' }
+      const rangeB = { from: '2026-07-08', to: '2026-07-14' }
+      await handlers['codeburn:getPeriodCompare']!(rangeA, rangeB, 'all')
+      expect(calls[3]).toEqual(['compare-periods', '--format', 'json', '--from-a', '2026-07-01', '--to-a', '2026-07-07', '--from-b', '2026-07-08', '--to-b', '2026-07-14', '--project=my-company', '--exclude=scratch'])
+      // The drill-down too: a filtered-out project must not surface behind a
+      // contribution row either.
+      await handlers['codeburn:getPeriodCompareSessions']!(rangeA, rangeB, 'all', 'model', 'sonnet')
+      expect(calls[4]).toEqual(['compare-periods', '--format', 'sessions', '--from-a', '2026-07-01', '--to-a', '2026-07-07', '--from-b', '2026-07-08', '--to-b', '2026-07-14', '--project=my-company', '--exclude=scratch', '--dimension', 'model', '--key', 'sonnet'])
     })
   })
 
