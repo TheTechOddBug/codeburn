@@ -641,3 +641,10 @@
 "cache read" = "cache read";
 "Cache read: %@ tokens" = "Cache read: %@ tokens";
 "Quota window %@" = "Quota window %@";
+
+/* MARK: Language picker */
+"Language" = "Language";
+"System" = "System";
+"Relaunch to apply." = "Relaunch to apply.";
+"Relaunch" = "Relaunch";
+"Follows System Settings > Language & Region unless you pick one here." = "Follows System Settings > Language & Region unless you pick one here.";

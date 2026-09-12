@@ -192,10 +192,15 @@ enum LocalizationSourceScanner {
     /// - `CapacityDockProvider.displayName` and `CodexUsage.*.displayName` —
     ///   provider, model and plan names, which the catalog header lists as
     ///   verbatim in every locale.
+    /// - `LanguagePreference.displayLabel` — each language names itself
+    ///   ("English", "简体中文"). Translating an endonym defeats the picker:
+    ///   someone opens it because the UI is in a language they cannot read.
+    ///   Its `.system` case is routed through `L(…)` even so.
     static let untranslatedLabelProperties: Set<String> = [
         "CapacityDockGlanceWindowKind.displayName",
         "CapacityDockProvider.displayName",
         "CapacityDockProviderCatalogEntry.displayName",
+        "LanguagePreference.displayLabel",
         "PlanType.displayName",
         "Tier.displayName",
     ]

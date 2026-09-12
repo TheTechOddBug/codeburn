@@ -11,10 +11,11 @@ Native Swift + SwiftUI menubar app. The codeburn menubar surface.
 ## Language
 
 The app ships English and Simplified Chinese (`zh-Hans`) and follows your system
-language: no setting inside CodeBurn, because macOS already owns this choice. To
-use a different language for CodeBurn than for the rest of the system, open
-System Settings > General > Language & Region, scroll to Applications, and add
-CodeBurn Menubar there.
+language. Settings > General > Language overrides it for CodeBurn alone, with
+System as the default; the change applies on relaunch. It writes `AppleLanguages`
+into CodeBurn's own preferences domain, which is the same key System Settings >
+General > Language & Region > Applications writes, so the two are one setting
+rather than two.
 
 Strings live in `Sources/CodeBurnMenubar/Resources/<locale>.lproj/Localizable.strings`
 and are reached through `L(_:)` / `L(_:_:)` (see `Localization.swift`). The key

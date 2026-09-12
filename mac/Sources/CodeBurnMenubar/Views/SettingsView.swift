@@ -372,6 +372,8 @@ private struct GeneralSettingsTab: View {
     // "Custom…" budget entry state, one per metric (cost in dollars, tokens in
     // millions). When custom is active the picker shows "Custom…" and a field
     // appears for an exact amount.
+    @State private var language = LanguagePreference.current()
+    @State private var languageChanged = false
     @State private var costCustom = false
     @State private var tokenCustom = false
     @State private var costText = ""
@@ -496,6 +498,34 @@ private struct GeneralSettingsTab: View {
             }
 
             CapacityDockSettingsSection()
+
+            Section(L("Language")) {
+                Picker(L("Language"), selection: $language) {
+                    ForEach(LanguagePreference.allCases) { choice in
+                        Text(choice.displayLabel).tag(choice)
+                    }
+                }
+                .pickerStyle(.menu)
+                .onChange(of: language) { _, choice in
+                    LanguagePreference.apply(choice)
+                    languageChanged = true
+                }
+                if languageChanged {
+                    // Inline rather than modal: the strings already loaded stay
+                    // as they are until the process restarts, and nothing is
+                    // lost by putting that off.
+                    HStack {
+                        Text(L("Relaunch to apply."))
+                            .font(.system(size: 11))
+                            .foregroundStyle(.secondary)
+                        Button(L("Relaunch")) { relaunch() }
+                    }
+                } else {
+                    Text(L("Follows System Settings > Language & Region unless you pick one here."))
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
+                }
+            }
 
             Section(L("Usage Refresh")) {
                 Picker(L("Update every"), selection: Binding(
@@ -622,6 +652,17 @@ private struct GeneralSettingsTab: View {
         }
         .formStyle(.grouped)
         .padding()
+    }
+
+    /// Restarts through a detached shell so the new process is not a child of
+    /// the one being terminated. The delay lets this instance exit before `open`
+    /// looks for a running copy.
+    private func relaunch() {
+        let task = Process()
+        task.executableURL = URL(fileURLWithPath: "/bin/sh")
+        task.arguments = ["-c", "sleep 0.6; open -n \"\(Bundle.main.bundlePath)\""]
+        try? task.run()
+        NSApp.terminate(nil)
     }
 
     private func applyCurrency(code: String) {
