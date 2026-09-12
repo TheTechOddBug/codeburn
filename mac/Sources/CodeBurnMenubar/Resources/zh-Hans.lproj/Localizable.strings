@@ -685,3 +685,26 @@
 "weekly usage" = "每周用量";
 "Opus weekly usage" = "Opus 每周用量";
 "Sonnet weekly usage" = "Sonnet 每周用量";
+
+/* MARK: Codex banked limit resets (#725) */
+"%lld available" = "%lld 个可用";
+"%lld usable now" = "%lld 个现在可用";
+"next %@ lands %@" = "下一次%@将于 %@ 到账";
+"latest %@ granted %@" = "最近一次%@于 %@ 发放";
+"next expires %@" = "下一个将于 %@ 过期";
+"A %@ lands %@." = "一次%@将于 %@ 到账。";
+"A %@ was added to your account %@." = "%@ 已于 %@ 添加到你的账户。";
+"A %@ was added to your account." = "%@ 已添加到你的账户。";
+"You have %lld available to use." = "你有 %lld 个可以使用。";
+"Codex banked a limit reset" = "Codex 存入了一次限额重置";
+"limit reset" = "限额重置";
+"%@ reset" = "%@重置";
+"daily" = "每日";
+"monthly" = "每月";
+"hourly" = "每小时";
+"just now" = "刚刚";
+"%lldm ago" = "%lld 分钟前";
+"%lldh ago" = "%lld 小时前";
+"%lldd ago" = "%lld 天前";
+"in under a minute" = "不到一分钟后";
+"Input tokens reused from this provider's prompt cache today — not fresh input (arrow.down), not cache writes, and already priced at the cache-read rate inside the burned figure." = "今天从该服务商提示缓存中复用的输入 Token。不是新的输入（arrow.down），也不是缓存写入，并且已按缓存读取费率计入已消耗金额。";

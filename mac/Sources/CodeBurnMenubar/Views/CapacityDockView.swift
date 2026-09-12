@@ -1129,9 +1129,9 @@ struct CapacityDockDetailView: View {
     @ViewBuilder
     private func cacheReadLine(_ value: Double) -> some View {
         let s = model.detailScale
-        let explanation = "Input tokens reused from this provider's prompt cache today — "
-            + "not fresh input (arrow.down), not cache writes, and already priced at the "
-            + "cache-read rate inside the burned figure."
+        let explanation = L(
+            "Input tokens reused from this provider's prompt cache today — not fresh input (arrow.down), not cache writes, and already priced at the cache-read rate inside the burned figure."
+        )
         HStack(spacing: 4 * s) {
             Image(systemName: "arrow.triangle.2.circlepath")
                 .font(.system(size: 9, weight: .semibold))

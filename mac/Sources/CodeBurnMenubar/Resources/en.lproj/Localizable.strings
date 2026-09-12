@@ -693,3 +693,26 @@
 "weekly usage" = "weekly usage";
 "Opus weekly usage" = "Opus weekly usage";
 "Sonnet weekly usage" = "Sonnet weekly usage";
+
+/* MARK: Codex banked limit resets (#725) */
+"%lld available" = "%lld available";
+"%lld usable now" = "%lld usable now";
+"next %@ lands %@" = "next %@ lands %@";
+"latest %@ granted %@" = "latest %@ granted %@";
+"next expires %@" = "next expires %@";
+"A %@ lands %@." = "A %@ lands %@.";
+"A %@ was added to your account %@." = "A %@ was added to your account %@.";
+"A %@ was added to your account." = "A %@ was added to your account.";
+"You have %lld available to use." = "You have %lld available to use.";
+"Codex banked a limit reset" = "Codex banked a limit reset";
+"limit reset" = "limit reset";
+"%@ reset" = "%@ reset";
+"daily" = "daily";
+"monthly" = "monthly";
+"hourly" = "hourly";
+"just now" = "just now";
+"%lldm ago" = "%lldm ago";
+"%lldh ago" = "%lldh ago";
+"%lldd ago" = "%lldd ago";
+"in under a minute" = "in under a minute";
+"Input tokens reused from this provider's prompt cache today — not fresh input (arrow.down), not cache writes, and already priced at the cache-read rate inside the burned figure." = "Input tokens reused from this provider's prompt cache today — not fresh input (arrow.down), not cache writes, and already priced at the cache-read rate inside the burned figure.";
