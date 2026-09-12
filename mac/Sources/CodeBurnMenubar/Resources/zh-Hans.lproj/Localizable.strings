@@ -350,7 +350,7 @@
 "Anthropic temporarily unreachable. Retrying." = "暂时无法连接 Anthropic，正在重试。";
 "Reconnect Claude" = "重新连接 Claude";
 "Your Claude session has expired. Open Claude Code in your terminal and type `/login`, then click Reconnect." = "你的 Claude 会话已过期。在终端中打开 Claude Code 并输入 `/login`，然后点按“重新连接”。";
-"Resets %@" = "%@重置";
+"Resets %@" = "重置：%@";
 "5-hour window" = "5 小时窗口";
 "7-day total" = "7 天总计";
 "7-day Opus" = "7 天 Opus";
@@ -370,8 +370,6 @@
 "Credits" = "点数";
 "Unlimited" = "无限制";
 "Limit resets" = "限额重置";
-"%lld available" = "%lld 个可用";
-"%@ · next expires %@" = "%@ · 下一个将于%@过期";
 "No Kimi Code credentials found" = "未找到 Kimi Code 凭证";
 "Sign in with the Kimi CLI first. Then click Try Again." = "请先通过 Kimi 命令行工具登录，然后点按“再试一次”。";
 "Reading Kimi Code credentials..." = "正在读取 Kimi Code 凭证…";
@@ -541,19 +539,22 @@
 "Sign in with the Gemini CLI first, then click Connect." = "请先通过 Gemini 命令行工具登录，然后点按“连接”。";
 "Disconnect Gemini?" = "要断开 Gemini 连接吗？";
 "CodeBurn will stop tracking Gemini quota. Your ~/.gemini credentials are untouched. The Gemini CLI keeps working." = "CodeBurn 将停止跟踪 Gemini 配额。你的 ~/.gemini 凭证不会受到影响，Gemini 命令行工具仍可正常使用。";
-"Copilot live-quota tracking reads a GitHub token that is already on this Mac, read-only. Nothing is copied or stored. CodeBurn looks at the editor plugin files in `~/.config/github-copilot`, the Copilot CLI's `~/.copilot` files, the COPILOT_GITHUB_TOKEN, GH_TOKEN and GITHUB_TOKEN variables, `gh auth token`, and finally a token you paste below. Usage tracking works without any of this; only the live quota bars need a token. A credential found for a GitHub Enterprise Cloud host is queried on that tenant's own API (api.<tenant>.ghe.com) and never sent to api.github.com." = "Copilot 实时配额跟踪以只读方式读取这台 Mac 上已有的 GitHub 令牌，不会复制或存储任何内容。CodeBurn 会依次查看 `~/.config/github-copilot` 中的编辑器插件文件、Copilot 命令行工具的 `~/.copilot` 文件、COPILOT_GITHUB_TOKEN、GH_TOKEN 和 GITHUB_TOKEN 环境变量、`gh auth token`，最后是你在下方粘贴的令牌。用量跟踪无需这些内容，只有实时配额条才需要令牌。为 GitHub Enterprise Cloud 主机找到的凭证，只会向该租户自己的 API（api.<tenant>.ghe.com）查询，绝不会发送到 api.github.com。";
+"Copilot live-quota tracking reads a GitHub token that is already on this Mac, read-only. Nothing is copied or stored. CodeBurn looks at the editor plugin files in `~/.config/github-copilot`, the Copilot CLI's `~/.copilot` files, the COPILOT_GITHUB_TOKEN, GH_TOKEN and GITHUB_TOKEN variables, `gh auth token`, and finally a token you paste below. Usage tracking works without any of this; only the live quota bars need a token. Every one of those carries the GitHub host it belongs to — the plugin files are keyed by host, the variables are read with GH_HOST, the `gh` login with the host in gh's own hosts.yml, and a pasted token with the host you type beside it — and a credential for a GitHub Enterprise Cloud host is queried on that tenant's own API (api.<tenant>.ghe.com), never sent to api.github.com." = "Copilot 实时配额跟踪以只读方式读取这台 Mac 上已有的 GitHub 令牌，不会复制或存储任何内容。CodeBurn 会依次查看 `~/.config/github-copilot` 中的编辑器插件文件、Copilot 命令行工具的 `~/.copilot` 文件、COPILOT_GITHUB_TOKEN、GH_TOKEN 和 GITHUB_TOKEN 环境变量、`gh auth token`，最后是你在下方粘贴的令牌。用量跟踪无需这些内容，只有实时配额条才需要令牌。上述每一种来源都会带上它所属的 GitHub 主机——插件文件按主机分类，环境变量通过 GH_HOST 读取，`gh` 登录取自 gh 自己 hosts.yml 中的主机，粘贴的令牌则取自你在旁边填写的主机——而为 GitHub Enterprise Cloud 主机找到的凭证，只会向该租户自己的 API（api.<tenant>.ghe.com）查询，绝不会发送到 api.github.com。";
 "GitHub token" = "GitHub 令牌";
+"GitHub host" = "GitHub 主机";
 "Save & Connect" = "存储并连接";
 "Clear Token" = "清除令牌";
 "Paste a token" = "粘贴令牌";
-"Optional, and only needed when nothing else on this Mac is signed in. A fine-grained personal access token with the \"Plan: Read-only\" permission is enough. The token is saved in CodeBurn's own Keychain item and is used only to read your Copilot quota." = "可选，仅当这台 Mac 上没有其他已登录来源时才需要。一个具有 \"Plan: Read-only\" 权限的细粒度个人访问令牌即可。该令牌保存在 CodeBurn 自己的钥匙串项目中，且仅用于读取你的 Copilot 配额。";
+"Optional, and only needed when nothing else on this Mac is signed in. A fine-grained personal access token with the \"Plan: Read-only\" permission is enough. Leave the host at github.com unless the token was minted on a GitHub Enterprise Cloud tenant, in which case enter that tenant's host (<tenant>.ghe.com) so the token is never sent to api.github.com. Both are saved in CodeBurn's own Keychain item and are used only to read your Copilot quota." = "可选，仅当这台 Mac 上没有其他已登录来源时才需要。一个具有 \"Plan: Read-only\" 权限的细粒度个人访问令牌即可。主机请保持为 github.com，除非该令牌是在 GitHub Enterprise Cloud 租户上签发的；若是，请填入该租户的主机（<tenant>.ghe.com），这样令牌就绝不会发送到 api.github.com。两者都保存在 CodeBurn 自己的钥匙串项目中，且仅用于读取你的 Copilot 配额。";
 "Couldn't load Copilot quota" = "无法载入 Copilot 配额";
 "Live quota tracked from %@." = "实时配额来自 %@。";
 "Plan: %@. Live quota tracked from %@." = "套餐：%@。实时配额来自 %@。";
 "Sign in again with the Copilot CLI, an editor's Copilot plugin, or gh auth login, then click Reconnect." = "请通过 Copilot 命令行工具、编辑器的 Copilot 插件或 gh auth login 重新登录，然后点按“重新连接”。";
 "GitHub rate-limited; auto-retrying." = "GitHub 已限流，正在自动重试。";
 "Looking for a GitHub token on this Mac." = "正在这台 Mac 上查找 GitHub 令牌。";
-"Tap Load Quota to fetch live usage from api.github.com." = "点按“载入配额”以从 api.github.com 获取实时用量。";
+"Tap Load Quota to fetch live usage from GitHub." = "点按“载入配额”以从 GitHub 获取实时用量。";
+"Tap Load Quota to fetch live usage from %@." = "点按“载入配额”以从 %@ 获取实时用量。";
+"CodeBurn cannot read Copilot quota for %@. Use github.com or a GitHub Enterprise Cloud host (*.ghe.com)." = "CodeBurn 无法读取 %@ 的 Copilot 配额。请使用 github.com 或 GitHub Enterprise Cloud 主机（*.ghe.com）。";
 "Disconnect Copilot?" = "要断开 Copilot 连接吗？";
 "CodeBurn will stop tracking Copilot quota. Every credential it read stays untouched, and your Copilot clients keep working." = "CodeBurn 将停止跟踪 Copilot 配额。它读取过的所有凭证都不会受到影响，你的 Copilot 客户端仍可正常使用。";
 "Antigravity live-quota tracking talks to the Antigravity app's local language server on 127.0.0.1 only. Nothing leaves the machine and no credential files are read. If it shows as disconnected, start the Antigravity app, then click Reconnect." = "Antigravity 实时配额跟踪仅通过 127.0.0.1 与 Antigravity 应用的本地语言服务通信。没有任何数据离开这台机器，也不会读取凭证文件。若显示为已断开，请启动 Antigravity 应用，然后点按“重新连接”。";
@@ -614,10 +615,21 @@
 "%@ today" = "今日 %@";
 "%@ tok today" = "今日 %@ tok";
 "%lld%% left" = "剩余 %lld%%";
-"%@ %lld%% left" = "%@ 剩余 %lld%%";
 
 /* MARK: Codex credit limit */
 "Monthly usage limit" = "每月用量上限";
 "Monthly usage limit · limit reached" = "每月用量上限 · 已达上限";
 "Monthly usage limit · %@ / %@ credits" = "每月用量上限 · %@ / %@ 点数";
 "%@ · limit reached" = "%@ · 已达上限";
+
+/* MARK: Added on rebase onto main (#1306, #1313, #1314, #1328, #1329) */
+"Last known usage" = "最近已知用量";
+"Notifications" = "通知";
+"Notify me when Codex banks a limit reset" = "Codex 获得限额重置额度时通知我";
+"OpenAI sometimes grants Codex accounts a credit that resets a rate-limit window early. CodeBurn reads these from the quota response it already fetches and tells you once per grant. It never spends one." = "OpenAI 有时会向 Codex 账户发放一份额度，用于提前重置某个限流窗口。CodeBurn 会从它已经获取的配额响应中读取这些额度，并为每次发放提醒你一次。CodeBurn 绝不会使用这些额度。";
+"Notify me when a quota resets early" = "配额提前重置时通知我";
+"Posts a notification when a provider resets a usage limit before its scheduled time, so you know the capacity is back. The Capacity Dock shows the same notice for 12 hours either way." = "当某个服务商在预定时间之前重置用量限额时发送通知，让你知道额度已经恢复。无论是否开启，容量 Dock 都会将同样的提示显示 12 小时。";
+"Derived from this Mac's own record of past quota windows for this provider. Local only — nothing is fetched to produce it." = "根据这台 Mac 自己记录的该服务商过往配额窗口得出。仅限本地——不会为此获取任何数据。";
+"cache read" = "缓存读取";
+"Cache read: %@ tokens" = "缓存读取：%@ Token";
+"Quota window %@" = "配额窗口 %@";

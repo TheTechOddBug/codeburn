@@ -376,8 +376,6 @@
 "Credits" = "Credits";
 "Unlimited" = "Unlimited";
 "Limit resets" = "Limit resets";
-"%lld available" = "%lld available";
-"%@ · next expires %@" = "%@ · next expires %@";
 "No Kimi Code credentials found" = "No Kimi Code credentials found";
 "Sign in with the Kimi CLI first. Then click Try Again." = "Sign in with the Kimi CLI first. Then click Try Again.";
 "Reading Kimi Code credentials..." = "Reading Kimi Code credentials...";
@@ -548,19 +546,22 @@
 "Sign in with the Gemini CLI first, then click Connect." = "Sign in with the Gemini CLI first, then click Connect.";
 "Disconnect Gemini?" = "Disconnect Gemini?";
 "CodeBurn will stop tracking Gemini quota. Your ~/.gemini credentials are untouched. The Gemini CLI keeps working." = "CodeBurn will stop tracking Gemini quota. Your ~/.gemini credentials are untouched. The Gemini CLI keeps working.";
-"Copilot live-quota tracking reads a GitHub token that is already on this Mac, read-only. Nothing is copied or stored. CodeBurn looks at the editor plugin files in `~/.config/github-copilot`, the Copilot CLI's `~/.copilot` files, the COPILOT_GITHUB_TOKEN, GH_TOKEN and GITHUB_TOKEN variables, `gh auth token`, and finally a token you paste below. Usage tracking works without any of this; only the live quota bars need a token. A credential found for a GitHub Enterprise Cloud host is queried on that tenant's own API (api.<tenant>.ghe.com) and never sent to api.github.com." = "Copilot live-quota tracking reads a GitHub token that is already on this Mac, read-only. Nothing is copied or stored. CodeBurn looks at the editor plugin files in `~/.config/github-copilot`, the Copilot CLI's `~/.copilot` files, the COPILOT_GITHUB_TOKEN, GH_TOKEN and GITHUB_TOKEN variables, `gh auth token`, and finally a token you paste below. Usage tracking works without any of this; only the live quota bars need a token. A credential found for a GitHub Enterprise Cloud host is queried on that tenant's own API (api.<tenant>.ghe.com) and never sent to api.github.com.";
+"Copilot live-quota tracking reads a GitHub token that is already on this Mac, read-only. Nothing is copied or stored. CodeBurn looks at the editor plugin files in `~/.config/github-copilot`, the Copilot CLI's `~/.copilot` files, the COPILOT_GITHUB_TOKEN, GH_TOKEN and GITHUB_TOKEN variables, `gh auth token`, and finally a token you paste below. Usage tracking works without any of this; only the live quota bars need a token. Every one of those carries the GitHub host it belongs to — the plugin files are keyed by host, the variables are read with GH_HOST, the `gh` login with the host in gh's own hosts.yml, and a pasted token with the host you type beside it — and a credential for a GitHub Enterprise Cloud host is queried on that tenant's own API (api.<tenant>.ghe.com), never sent to api.github.com." = "Copilot live-quota tracking reads a GitHub token that is already on this Mac, read-only. Nothing is copied or stored. CodeBurn looks at the editor plugin files in `~/.config/github-copilot`, the Copilot CLI's `~/.copilot` files, the COPILOT_GITHUB_TOKEN, GH_TOKEN and GITHUB_TOKEN variables, `gh auth token`, and finally a token you paste below. Usage tracking works without any of this; only the live quota bars need a token. Every one of those carries the GitHub host it belongs to — the plugin files are keyed by host, the variables are read with GH_HOST, the `gh` login with the host in gh's own hosts.yml, and a pasted token with the host you type beside it — and a credential for a GitHub Enterprise Cloud host is queried on that tenant's own API (api.<tenant>.ghe.com), never sent to api.github.com.";
 "GitHub token" = "GitHub token";
+"GitHub host" = "GitHub host";
 "Save & Connect" = "Save & Connect";
 "Clear Token" = "Clear Token";
 "Paste a token" = "Paste a token";
-"Optional, and only needed when nothing else on this Mac is signed in. A fine-grained personal access token with the \"Plan: Read-only\" permission is enough. The token is saved in CodeBurn's own Keychain item and is used only to read your Copilot quota." = "Optional, and only needed when nothing else on this Mac is signed in. A fine-grained personal access token with the \"Plan: Read-only\" permission is enough. The token is saved in CodeBurn's own Keychain item and is used only to read your Copilot quota.";
+"Optional, and only needed when nothing else on this Mac is signed in. A fine-grained personal access token with the \"Plan: Read-only\" permission is enough. Leave the host at github.com unless the token was minted on a GitHub Enterprise Cloud tenant, in which case enter that tenant's host (<tenant>.ghe.com) so the token is never sent to api.github.com. Both are saved in CodeBurn's own Keychain item and are used only to read your Copilot quota." = "Optional, and only needed when nothing else on this Mac is signed in. A fine-grained personal access token with the \"Plan: Read-only\" permission is enough. Leave the host at github.com unless the token was minted on a GitHub Enterprise Cloud tenant, in which case enter that tenant's host (<tenant>.ghe.com) so the token is never sent to api.github.com. Both are saved in CodeBurn's own Keychain item and are used only to read your Copilot quota.";
 "Couldn't load Copilot quota" = "Couldn't load Copilot quota";
 "Live quota tracked from %@." = "Live quota tracked from %@.";
 "Plan: %@. Live quota tracked from %@." = "Plan: %@. Live quota tracked from %@.";
 "Sign in again with the Copilot CLI, an editor's Copilot plugin, or gh auth login, then click Reconnect." = "Sign in again with the Copilot CLI, an editor's Copilot plugin, or gh auth login, then click Reconnect.";
 "GitHub rate-limited; auto-retrying." = "GitHub rate-limited; auto-retrying.";
 "Looking for a GitHub token on this Mac." = "Looking for a GitHub token on this Mac.";
-"Tap Load Quota to fetch live usage from api.github.com." = "Tap Load Quota to fetch live usage from api.github.com.";
+"Tap Load Quota to fetch live usage from GitHub." = "Tap Load Quota to fetch live usage from GitHub.";
+"Tap Load Quota to fetch live usage from %@." = "Tap Load Quota to fetch live usage from %@.";
+"CodeBurn cannot read Copilot quota for %@. Use github.com or a GitHub Enterprise Cloud host (*.ghe.com)." = "CodeBurn cannot read Copilot quota for %@. Use github.com or a GitHub Enterprise Cloud host (*.ghe.com).";
 "Disconnect Copilot?" = "Disconnect Copilot?";
 "CodeBurn will stop tracking Copilot quota. Every credential it read stays untouched, and your Copilot clients keep working." = "CodeBurn will stop tracking Copilot quota. Every credential it read stays untouched, and your Copilot clients keep working.";
 "Antigravity live-quota tracking talks to the Antigravity app's local language server on 127.0.0.1 only. Nothing leaves the machine and no credential files are read. If it shows as disconnected, start the Antigravity app, then click Reconnect." = "Antigravity live-quota tracking talks to the Antigravity app's local language server on 127.0.0.1 only. Nothing leaves the machine and no credential files are read. If it shows as disconnected, start the Antigravity app, then click Reconnect.";
@@ -622,10 +623,21 @@
 "%@ today" = "%@ today";
 "%@ tok today" = "%@ tok today";
 "%lld%% left" = "%lld%% left";
-"%@ %lld%% left" = "%@ %lld%% left";
 
 /* MARK: Codex credit limit */
 "Monthly usage limit" = "Monthly usage limit";
 "Monthly usage limit · limit reached" = "Monthly usage limit · limit reached";
 "Monthly usage limit · %@ / %@ credits" = "Monthly usage limit · %@ / %@ credits";
 "%@ · limit reached" = "%@ · limit reached";
+
+/* MARK: Added on rebase onto main (#1306, #1313, #1314, #1328, #1329) */
+"Last known usage" = "Last known usage";
+"Notifications" = "Notifications";
+"Notify me when Codex banks a limit reset" = "Notify me when Codex banks a limit reset";
+"OpenAI sometimes grants Codex accounts a credit that resets a rate-limit window early. CodeBurn reads these from the quota response it already fetches and tells you once per grant. It never spends one." = "OpenAI sometimes grants Codex accounts a credit that resets a rate-limit window early. CodeBurn reads these from the quota response it already fetches and tells you once per grant. It never spends one.";
+"Notify me when a quota resets early" = "Notify me when a quota resets early";
+"Posts a notification when a provider resets a usage limit before its scheduled time, so you know the capacity is back. The Capacity Dock shows the same notice for 12 hours either way." = "Posts a notification when a provider resets a usage limit before its scheduled time, so you know the capacity is back. The Capacity Dock shows the same notice for 12 hours either way.";
+"Derived from this Mac's own record of past quota windows for this provider. Local only — nothing is fetched to produce it." = "Derived from this Mac's own record of past quota windows for this provider. Local only — nothing is fetched to produce it.";
+"cache read" = "cache read";
+"Cache read: %@ tokens" = "Cache read: %@ tokens";
+"Quota window %@" = "Quota window %@";

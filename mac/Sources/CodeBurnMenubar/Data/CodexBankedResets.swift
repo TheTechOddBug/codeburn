@@ -105,7 +105,7 @@ enum CodexBankedResetDetector {
 enum CodexBankedResetPresentation {
     /// Label the detail hangs off, in the Plan tab and in front of the detail on
     /// every other surface.
-    static let rowLabel = "Limit resets"
+    static var rowLabel: String { L("Limit resets") }
 
     /// `2 available · 1 usable now · latest weekly reset granted 2h ago · next expires in 16h`
     /// Nil when the account holds nothing — the row hides rather than printing a zero.
