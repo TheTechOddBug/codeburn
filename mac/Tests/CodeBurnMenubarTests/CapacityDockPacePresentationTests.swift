@@ -131,6 +131,24 @@ struct CapacityDockPacePresentationTests {
         #expect(!(line?.text.contains("until reset") ?? false))
     }
 
+    @Test("The on-pace band is two points wide in each direction")
+    func onPaceBandEdges() {
+        // Nothing else pins this width, so widening it would silently turn a
+        // real deficit into "On pace" on every short window.
+        #expect(f.line(percent: 0.515, elapsedFraction: 0.5, windowSeconds: f.fiveHours)?.text == "On pace")
+        #expect(f.line(percent: 0.485, elapsedFraction: 0.5, windowSeconds: f.fiveHours)?.text == "On pace")
+        #expect(f.line(percent: 0.53, elapsedFraction: 0.5, windowSeconds: f.fiveHours)?.text == "3% in deficit")
+        #expect(f.line(percent: 0.47, elapsedFraction: 0.5, windowSeconds: f.fiveHours)?.text == "3% in reserve")
+    }
+
+    @Test("Six hours exactly is still a short window; one second more is not")
+    func etaSuppressionBoundary() {
+        let sixHours = 6 * 3600
+        #expect(f.line(percent: 0.9, elapsedFraction: 0.5, windowSeconds: sixHours)?.text == "40% in deficit")
+        let justOver = f.line(percent: 0.9, elapsedFraction: 0.5, windowSeconds: sixHours + 1)
+        #expect(justOver?.text.hasPrefix("Runs out in") == true)
+    }
+
     @Test("Stale, failed and disconnected data get nothing")
     func nonConnectedDataIsSilent() {
         for connection: QuotaSummary.Connection in [.stale, .loading, .transientFailure, .disconnected] {
