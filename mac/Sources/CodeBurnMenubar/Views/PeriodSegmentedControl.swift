@@ -65,10 +65,12 @@ private struct CalendarPopover: View {
     @State private var pending: Set<String> = []
 
     private let calendar = Calendar.current
-    /// Monday-first, from the current locale's own very-short weekday symbols
-    /// (Sunday-indexed), so zh-Hans renders 一…日 without a translation key.
+    /// Monday-first, from the locale's own short weekday symbols (Sunday-indexed)
+    /// clipped to two units, so en keeps its existing `Mo Tu We` row and zh-Hans
+    /// reads `周一 周二`. `veryShortWeekdaySymbols` would give English a row of
+    /// `M T W T F S S` with two ambiguous pairs.
     private let weekdays: [String] = {
-        let symbols = Calendar.current.veryShortWeekdaySymbols
+        let symbols = Calendar.current.shortWeekdaySymbols.map { String($0.prefix(2)) }
         guard symbols.count == 7 else { return symbols }
         return Array(symbols[1...]) + [symbols[0]]
     }()
