@@ -105,6 +105,20 @@ final class AppStore {
     var displayMetric: DisplayMetric = DisplayMetric(rawValue: UserDefaults.standard.string(forKey: "CodeBurnDisplayMetric") ?? "") ?? .cost {
         didSet { UserDefaults.standard.set(displayMetric.rawValue, forKey: "CodeBurnDisplayMetric") }
     }
+    /// Optional second menu-bar line. Off by default, so the status item keeps
+    /// rendering exactly the historical single-row title until asked otherwise.
+    var menubarSecondRowEnabled: Bool = MenubarRowPreferences.load().isSecondRowEnabled {
+        didSet { MenubarRowPreferences.setSecondRowEnabled(menubarSecondRowEnabled) }
+    }
+    var menubarSecondRowMetric: MenubarSecondRowMetric = MenubarRowPreferences.load().secondRowMetric {
+        didSet { MenubarRowPreferences.setSecondRowMetric(menubarSecondRowMetric) }
+    }
+    var menubarRowSettings: MenubarRowSettings {
+        MenubarRowSettings(
+            isSecondRowEnabled: menubarSecondRowEnabled,
+            secondRowMetric: menubarSecondRowMetric
+        )
+    }
     var dailyBudget: Double = UserDefaults.standard.double(forKey: "CodeBurnDailyBudget") {
         didSet { UserDefaults.standard.set(dailyBudget, forKey: "CodeBurnDailyBudget") }
     }
@@ -186,8 +200,9 @@ final class AppStore {
     var copilotError: String?
     // Same file-based activation as Kimi/Gemini — reading
     // Copilot discovery never raises a keychain prompt, so we start dormant and
-    // auto-activate on the first refresh tick.
-    var copilotLoadState: SubscriptionLoadState = CopilotSubscriptionService.hasCredential ? .dormant : .notBootstrapped
+    // auto-activate on the first refresh tick unless the user explicitly
+    // disconnected. That opt-out is persisted and applied in `init`.
+    var copilotLoadState: SubscriptionLoadState = .notBootstrapped
 
     var antigravityUsage: AntigravityUsage?
     var antigravityError: String?
@@ -235,6 +250,19 @@ final class AppStore {
         (CapacityDockProvider) -> Void = {
             CapacityDockPreferences.removeProvider($0)
         }
+    @ObservationIgnored var copilotQuotaRuntime: CopilotQuotaRuntime
+
+    init(copilotQuotaRuntime: CopilotQuotaRuntime = .live) {
+        self.copilotQuotaRuntime = copilotQuotaRuntime
+        copilotLoadState = Self.initialCopilotLoadState(runtime: copilotQuotaRuntime)
+    }
+
+    private static func initialCopilotLoadState(runtime: CopilotQuotaRuntime) -> SubscriptionLoadState {
+        if CopilotExplicitDisconnect.isSet(defaults: runtime.defaults) {
+            return .notBootstrapped
+        }
+        return runtime.hasCredential() ? .dormant : .notBootstrapped
+    }
 
     /// Generation tokens for the in-flight refresh tasks. Incremented on every
     /// disconnect / reset so a fetch that started before the disconnect cannot
@@ -1861,13 +1889,19 @@ final class AppStore {
 
     /// Same prompt-free activation as Kimi/Gemini: the whole Copilot discovery
     /// chain is prompt-free, so the first refresh tick activates dormant state.
+    /// Automatic cadence must not clear an explicit disconnect; that happens
+    /// only in `connectCopilot`.
     func bootstrapCopilot() async {
+        if CopilotExplicitDisconnect.isSet(defaults: copilotQuotaRuntime.defaults) {
+            copilotLoadState = .notBootstrapped
+            return
+        }
         // Capture the generation before the await so a disconnect that lands
         // mid-fetch cannot be resurrected into .loaded when the fetch returns.
         let gen = copilotRefreshGen
         copilotLoadState = .bootstrapping
         do {
-            let usage = try await CopilotSubscriptionService.refresh()
+            let usage = try await copilotQuotaRuntime.refresh()
             guard gen == copilotRefreshGen else { return }
             copilotUsage = usage
             copilotError = nil
@@ -1882,24 +1916,35 @@ final class AppStore {
         }
     }
 
+    /// User-initiated Connect / Reconnect / Load Quota. Clears persisted
+    /// explicit disconnect so discovery may run again.
+    func connectCopilot() async {
+        CopilotExplicitDisconnect.clear(defaults: copilotQuotaRuntime.defaults)
+        await bootstrapCopilot()
+    }
+
     func refreshCopilot() async {
         _ = await refreshCopilotReportingSuccess()
     }
 
     @discardableResult
     func refreshCopilotReportingSuccess() async -> Bool {
+        if CopilotExplicitDisconnect.isSet(defaults: copilotQuotaRuntime.defaults) {
+            if copilotLoadState != .notBootstrapped { copilotLoadState = .notBootstrapped }
+            return false
+        }
         if case .dormant = copilotLoadState {
             await bootstrapCopilot()
             return copilotLoadState == .loaded
         }
-        guard CopilotSubscriptionService.hasCredential else {
+        guard copilotQuotaRuntime.hasCredential() else {
             if copilotLoadState != .notBootstrapped { copilotLoadState = .notBootstrapped }
             return false
         }
         let gen = copilotRefreshGen
         if copilotUsage == nil { copilotLoadState = .loading }
         do {
-            let usage = try await CopilotSubscriptionService.refresh()
+            let usage = try await copilotQuotaRuntime.refresh()
             guard gen == copilotRefreshGen else { return false }
             copilotUsage = usage
             copilotError = nil
@@ -1918,7 +1963,8 @@ final class AppStore {
     }
 
     func disconnectCopilot() {
-        CopilotSubscriptionService.disconnect()
+        copilotQuotaRuntime.disconnectService()
+        CopilotExplicitDisconnect.mark(defaults: copilotQuotaRuntime.defaults)
         copilotRefreshGen &+= 1
         copilotUsage = nil
         copilotError = nil
@@ -2154,6 +2200,54 @@ final class AppStore {
         return todayPayload?.current
     }
 
+    /// Connected providers that report a headline quota window, as plain values.
+    /// Bounded on purpose: the six adapters with a native quota path, plus the
+    /// CodeBurn-owned adapters whose summary has already been fetched. Nothing
+    /// here starts a fetch, so the menu-bar title stays a pure read.
+    var menubarQuotaCandidates: [MenubarQuotaCandidate] {
+        var candidates: [MenubarQuotaCandidate] = []
+        var seen: Set<String> = []
+
+        func append(label: String, summary: QuotaSummary?) {
+            guard let summary,
+                  summary.connection == .connected || summary.connection == .stale,
+                  let window = summary.headlineWindow,
+                  window.percent.isFinite,
+                  seen.insert(label).inserted else { return }
+            candidates.append(
+                MenubarQuotaCandidate(
+                    label: label,
+                    percentUsed: window.percent,
+                    resetsAt: window.resetsAt
+                )
+            )
+        }
+
+        for provider in CapacityDockPreferences.supportedProviders {
+            guard let filter = provider.legacyFilter else { continue }
+            append(label: provider.displayName, summary: quotaSummary(for: filter))
+        }
+        for (id, summary) in capacityDockProviderSummaries {
+            guard let provider = CapacityDockProvider(rawValue: id) else { continue }
+            append(label: provider.displayName, summary: summary)
+        }
+        return candidates
+    }
+
+    /// Plain-value snapshot the second menu-bar row formats. Reads only figures
+    /// the app already keeps for the popover.
+    var menubarRowSnapshot: MenubarRowSnapshot {
+        let today = capacityDockToday
+        return MenubarRowSnapshot(
+            quota: MenubarQuotaRowSelection.primary(from: menubarQuotaCandidates),
+            todayCost: today?.cost,
+            todayTotalTokens: today.map { $0.inputTokens + $0.outputTokens },
+            activeSessionCount: menubarPayload?.liveSessions?.sessions.count,
+            currencySymbol: CurrencyState.shared.symbol,
+            currencyRate: CurrencyState.shared.rate
+        )
+    }
+
     /// Today's totals for ONE provider's glance card. The card is provider
     /// scoped, so the machine-wide `capacityDockToday` block is the wrong number
     /// in it; `providerDetails` carries the per-provider row.
@@ -2381,7 +2475,7 @@ final class AppStore {
         case .codex: await bootstrapCodex()
         case .kimiCode: await bootstrapKimi()
         case .gemini: await bootstrapGemini()
-        case .copilot: await bootstrapCopilot()
+        case .copilot: await connectCopilot()
         case .antigravity: await bootstrapAntigravity()
         default: break
         }
