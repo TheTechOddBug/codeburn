@@ -52,9 +52,12 @@ struct CapacityDockPacePresentationTests {
     @Test("A window fraction is consumed as percent, not as a raw 0..1 value")
     func fractionBecomesPercent() {
         // 0.5 fraction at halfway through the week is 50% used — on pace.
+        // Read as a raw 0..1 value it would be 0.5% used, which projects to 1%
+        // at reset; the help text is where that number is still visible.
         let line = f.line(percent: 0.5, elapsedFraction: 0.5, windowSeconds: f.week)
         #expect(line?.kind == .estimate)
-        #expect(line?.text == "est. 100% at reset")
+        #expect(line?.text == "Lasts until reset")
+        #expect(line?.helpText.contains("Projected 100% used by the reset") == true)
         #expect(line?.tone == .neutral)
     }
 
@@ -64,7 +67,7 @@ struct CapacityDockPacePresentationTests {
         // from `now`, while the reset itself is still 4d 4h away.
         let line = f.line(percent: 0.6, elapsedFraction: 0.4, windowSeconds: f.week)
         #expect(line?.kind == .estimate)
-        #expect(line?.text == "est. out in 1d 20h")
+        #expect(line?.text == "Runs out in 1d 20h")
         #expect(line?.tone == .warning)
         #expect(!(line?.text.contains("early") ?? false))
     }
@@ -85,7 +88,8 @@ struct CapacityDockPacePresentationTests {
     @Test("Behind pace stays in reserve with a projection, no alarm")
     func reserveStaysNeutral() {
         let line = f.line(percent: 0.2, elapsedFraction: 0.5, windowSeconds: f.week)
-        #expect(line?.text == "est. 40% at reset")
+        #expect(line?.text == "Lasts until reset")
+        #expect(line?.helpText.contains("30% of the window still in reserve") == true)
         #expect(line?.tone == .neutral)
     }
 
@@ -97,7 +101,8 @@ struct CapacityDockPacePresentationTests {
     @Test("No usage yet reads as a zero projection, not as zero-signal")
     func noUsageYet() {
         let line = f.line(percent: 0.0, elapsedFraction: 0.5, windowSeconds: f.week)
-        #expect(line?.text == "est. 0% at reset")
+        #expect(line?.text == "Lasts until reset")
+        #expect(line?.helpText.contains("Projected 0% used by the reset") == true)
         #expect(line?.tone == .neutral)
     }
 
@@ -105,7 +110,7 @@ struct CapacityDockPacePresentationTests {
     func exhaustedState() {
         let reached = f.line(percent: 1.0, elapsedFraction: 0.5, windowSeconds: f.week)
         #expect(reached?.kind == .exhausted)
-        #expect(reached?.text == "limit reached")
+        #expect(reached?.text == "Limit reached")
         #expect(reached?.tone == .danger)
         let window = f.window(
             "Weekly", 1.0,
@@ -121,7 +126,9 @@ struct CapacityDockPacePresentationTests {
         #expect(line?.kind == .estimate)
         #expect(line?.text == "40% in deficit")
         #expect(line?.tone == .warning)
-        #expect(!(line?.text.contains("est.") ?? false))
+        // Neither the long-window verdict nor an ETA may appear here.
+        #expect(!(line?.text.contains("Runs out") ?? false))
+        #expect(!(line?.text.contains("until reset") ?? false))
     }
 
     @Test("Stale, failed and disconnected data get nothing")
@@ -211,7 +218,53 @@ struct CapacityDockPacePresentationTests {
         )
         let line = QuotaPacePresentation.line(for: window, connection: .connected, now: f.now)
         #expect(line?.kind == .estimate)
-        #expect(line?.text == "est. 96% at reset")
+        #expect(line?.text == "Lasts until reset")
+        #expect(line?.helpText.contains("Projected 96% used by the reset") == true)
+    }
+
+    @Test("A monthly cycle whose label reads Weekly paces against the month, not 7 days")
+    func grokBuildMonthlyCycleLabeledWeekly() {
+        // Grok Build picks its window label from the distance to the reset, so
+        // a monthly cycle sitting in the 4-12 day band is labeled "Weekly".
+        // Deriving the length from that label — the round trip #1287 used —
+        // paces a month's budget against 7 days.
+        let month = 30 * 24 * 3600
+        let resetsAt = f.now.addingTimeInterval(6 * 24 * 3600)   // inside the band
+        let window = f.window("Weekly", 0.72, resetsAt: resetsAt, windowSeconds: month)
+
+        // 24 of 30 days elapsed at 72% used projects to 90%: it lasts.
+        let line = QuotaPacePresentation.line(for: window, connection: .connected, now: f.now)
+        #expect(line?.text == "Lasts until reset")
+        #expect(line?.tone == .neutral)
+        #expect(line?.helpText.contains("30-day window") == true)
+
+        // The same sample against the label-inferred 7-day window is 1 of 7
+        // days elapsed, which projects past 500% and would print an alarming
+        // run-out ETA on a healthy account. That is the reading the real
+        // `windowSeconds` must never produce.
+        let asWeekly = QuotaPace.evaluate(
+            usedPercent: 72,
+            resetsAt: resetsAt,
+            windowSeconds: 7 * 24 * 3600,
+            now: f.now
+        )
+        #expect(asWeekly?.willOverflow == true)
+        #expect(line?.text != QuotaPacePresentation.caption(
+            for: asWeekly!,
+            windowSeconds: 7 * 24 * 3600,
+            now: f.now
+        ))
+
+        // And with no duration metadata at all, the label stays a label: the
+        // caption is silent rather than falling back to inferring "Weekly".
+        let noDuration = QuotaSummary.Window(
+            label: window.label,
+            percent: window.percent,
+            resetsAt: resetsAt,
+            windowSeconds: nil,
+            fetchedAt: f.now
+        )
+        #expect(QuotaPacePresentation.line(for: noDuration, connection: .connected, now: f.now) == nil)
     }
 
     @Test("Distinct scopes sharing a duration each keep their own caption")
@@ -222,8 +275,8 @@ struct CapacityDockPacePresentationTests {
         let weekly = f.window("Weekly", 0.5, resetsAt: f.resets(afterElapsedFraction: 0.5, windowSeconds: f.week), windowSeconds: f.week)
         let opus = f.window("Weekly · Opus", 1.0, resetsAt: f.resets(afterElapsedFraction: 0.5, windowSeconds: f.week), windowSeconds: f.week)
         let lines = QuotaPacePresentation.lines(for: [weekly, opus], connection: .connected, now: f.now)
-        #expect(lines[0]?.text == "est. 100% at reset")
-        #expect(lines[1]?.text == "limit reached")
+        #expect(lines[0]?.text == "Lasts until reset")
+        #expect(lines[1]?.text == "Limit reached")
     }
 
     @Test("Same-duration windows with different reset dates both keep captions")

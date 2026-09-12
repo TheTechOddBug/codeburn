@@ -112,6 +112,20 @@ V1 does not include:
   countdown. The most constrained available window supplies the ring value;
   this matches the reference's glance-first use and avoids understating a
   provider whose secondary window is closer to exhaustion.
+- Under that, one line says whether the window lasts: `Lasts until reset` or
+  `Runs out in 2d 8h`, and on windows of six hours or less, where a linear
+  run-out ETA is not defensible off a single burst, the pace stage instead
+  (`On pace`, `40% in deficit`, `30% in reserve`). It is the same whole-window
+  projection the Plan tab's caption uses, computed against the window length
+  the adapter reports — never a length inferred from the display label, which
+  mislabels any provider that picks its label from the distance to the reset.
+  It is silent early in a window, on an exhausted window, without a reset time,
+  without a validated duration, and on data that is stale, disconnected or
+  older than the ten-minute freshness horizon. The dock reserves its height
+  whether or not a column has a caption, because the panel's frame is computed
+  rather than fitted; the agent-tab quota hover card draws the same line under
+  its bar, indented past the label column, and simply omits it when silent
+  because that card is fitted.
 - Stale or retrying data remains visible and is labeled/dimmed. A terminal
   authentication/configuration failure provides a Connect/Reconnect action in
   the bubble itself. Network, rate-limit, parse, and provider outages remain

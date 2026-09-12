@@ -1,6 +1,7 @@
 import Foundation
 
-/// Turns a quota window into the Capacity Dock's one-line pace caption: the
+/// Turns a quota window into the one-line pace caption the Capacity Dock's
+/// window columns and the agent-tab quota hover card both draw (#1215): the
 /// whole-window average interpretation `QuotaPace` defends (#726 phase 1),
 /// rendered as "on pace", a deficit/reserve stage, an estimated exhaustion,
 /// or the explicit exhausted state. Deliberately text-only: the math lives in
@@ -89,7 +90,7 @@ enum QuotaPacePresentation {
             return Line(
                 kind: .exhausted,
                 tone: .danger,
-                text: "limit reached",
+                text: "Limit reached",
                 helpText: "This window's limit is fully used. It resets in \(countdownLabel(seconds: remaining))."
             )
         }
@@ -150,24 +151,28 @@ enum QuotaPacePresentation {
         }
     }
 
-    /// Compact caption. The estimate is the projection itself: an over-pace
-    /// window reads as "est. out in <now-to-limit>" and a window under pace
-    /// reads as "est. N% at reset", so the useful number always fits one
-    /// narrow column. On windows at or under
-    /// `QuotaPace.etaSuppressionMaxSeconds` there is no projection or ETA at
-    /// all — a linear read of a short window cries wolf after one burst — so
-    /// only the deficit/reserve stage shows.
+    /// Compact caption, phrased as the plain "am I going to make it?" answer
+    /// #1287 argued for rather than as a projection the reader has to decode:
+    /// a window that lands at or under the limit reads "Lasts until reset",
+    /// one that does not reads "Runs out in <now-to-limit>". The projected
+    /// percentage it came from stays in `helpText`, where there is room for
+    /// the reasoning. On windows at or under
+    /// `QuotaPace.etaSuppressionMaxSeconds` there is no defensible ETA at all
+    /// — a linear read of a short window cries wolf after one burst — so
+    /// those keep the on-pace / deficit / reserve stage instead (#726).
     static func caption(for result: QuotaPace.Result, windowSeconds: Int, now: Date = Date()) -> String {
         let compact = TimeInterval(windowSeconds) <= QuotaPace.etaSuppressionMaxSeconds
         if compact {
-            if abs(result.deltaPercent) <= 2 { return "on pace" }
+            if abs(result.deltaPercent) <= 2 { return "On pace" }
             if result.deltaPercent > 0 { return "\(Int(result.deltaPercent.rounded()))% in deficit" }
             return "\(Int(-result.deltaPercent.rounded()))% in reserve"
         }
-        if result.willOverflow, let hitsLimitAt = result.hitsLimitAt {
-            return "est. out in \(countdownLabel(from: now, to: hitsLimitAt))"
-        }
-        return "est. \(Int(result.projectedPercent.rounded()))% at reset"
+        guard result.willOverflow else { return "Lasts until reset" }
+        // A long overflowing window always yields an ETA (a projection over
+        // 100% implies a positive rate), but if that ever stopped holding,
+        // saying it lasts would be the one wrong answer.
+        guard let hitsLimitAt = result.hitsLimitAt else { return "Won't last until reset" }
+        return "Runs out in \(countdownLabel(from: now, to: hitsLimitAt))"
     }
 
     private static func helpText(
