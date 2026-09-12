@@ -2047,27 +2047,24 @@ final class AppStore {
         return todayPayload?.current
     }
 
-    /// Connected providers that report a headline quota window, as plain values.
-    /// Bounded on purpose: the six adapters with a native quota path, plus the
+    /// Providers that report a quota window, as plain values. Bounded on
+    /// purpose: the six adapters with a native quota path, plus the
     /// CodeBurn-owned adapters whose summary has already been fetched. Nothing
     /// here starts a fetch, so the menu-bar title stays a pure read.
+    ///
+    /// Which window each provider contributes, and which connection states still
+    /// count, are `MenubarQuotaRowSelection`'s business — it takes the worst
+    /// window, the same one the flame tints by, and keeps a backing-off provider
+    /// on its last-known data the way the Capacity Dock does.
     var menubarQuotaCandidates: [MenubarQuotaCandidate] {
         var candidates: [MenubarQuotaCandidate] = []
         var seen: Set<String> = []
 
         func append(label: String, summary: QuotaSummary?) {
             guard let summary,
-                  summary.connection == .connected || summary.connection == .stale,
-                  let window = summary.headlineWindow,
-                  window.percent.isFinite,
+                  let candidate = MenubarQuotaRowSelection.candidate(label: label, summary: summary),
                   seen.insert(label).inserted else { return }
-            candidates.append(
-                MenubarQuotaCandidate(
-                    label: label,
-                    percentUsed: window.percent,
-                    resetsAt: window.resetsAt
-                )
-            )
+            candidates.append(candidate)
         }
 
         for provider in CapacityDockPreferences.supportedProviders {
