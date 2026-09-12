@@ -243,11 +243,11 @@ enum MenubarRowFormatter {
             figures += " · \(countdown)"
         }
         guard !quota.label.isEmpty else { return figures }
-        let label = abbreviate(quota.label, to: secondRowCharacterBudget - figures.count - 1)
+        let label = abbreviate(quota.label, to: secondRowCharacterBudget - displayCells(figures) - 1)
         return label.isEmpty ? figures : "\(label) \(figures)"
     }
 
-    /// How wide the second row may get, in characters.
+    /// How wide the second row may get, in display cells (`displayCells(_:)`).
     ///
     /// The status item is variable width, so the widest line wins; an unbounded
     /// second row ("GitHub Copilot 12% left · 6d 3h") made the item more than
@@ -260,13 +260,42 @@ enum MenubarRowFormatter {
     /// past what the first row alone could already occupy.
     static let secondRowCharacterBudget = 24
 
-    /// Shortens `text` to `limit` characters, marking the cut with an ellipsis.
-    /// Returns "" when there is no room for even one character plus the mark, so
-    /// the caller can drop the part entirely rather than render a bare "…".
+    /// Display cells `text` occupies. A Han, kana or Hangul glyph is about twice
+    /// as wide as a Latin one, so counting Characters lets a translated row
+    /// overrun the very width the budget exists to hold: `6 小时 2 分` is 8
+    /// Characters and 11 cells.
+    ///
+    /// ponytail: the East Asian Wide/Fullwidth blocks the catalog can actually
+    /// contain, not the whole of UAX #11. Widen the ranges if a locale outside
+    /// them ships.
+    static func displayCells(_ text: String) -> Int {
+        text.unicodeScalars.reduce(0) { total, scalar in
+            switch scalar.value {
+            case 0x1100...0x115F, 0x2E80...0xA4CF, 0xAC00...0xD7A3,
+                 0xF900...0xFAFF, 0xFE30...0xFE6F, 0xFF00...0xFF60,
+                 0xFFE0...0xFFE6, 0x20000...0x3FFFD:
+                return total + 2
+            default:
+                return total + 1
+            }
+        }
+    }
+
+    /// Shortens `text` to `limit` display cells, marking the cut with an
+    /// ellipsis. Returns "" when there is no room for even one character plus
+    /// the mark, so the caller can drop the part entirely rather than render a
+    /// bare "…". Identical to a character count for an all-Latin row.
     static func abbreviate(_ text: String, to limit: Int) -> String {
-        guard text.count > limit else { return text }
+        guard displayCells(text) > limit else { return text }
         guard limit >= 2 else { return "" }
-        var kept = String(text.prefix(limit - 1))
+        var kept = ""
+        var used = 0
+        for character in text {
+            let width = displayCells(String(character))
+            if used + width > limit - 1 { break }
+            kept.append(character)
+            used += width
+        }
         while kept.last == " " { kept.removeLast() }
         return kept.isEmpty ? "" : kept + "…"
     }
