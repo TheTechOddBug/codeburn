@@ -521,6 +521,25 @@ struct EarlyQuotaResetMonitorTests {
         }
     }
 
+    @Test("Tapping an early-reset notice does not install an update")
+    func notificationIsNotAnUpdateNotice() async throws {
+        // The notification delegate installs an update for any tap whose
+        // identifier carries UpdateChecker's prefix, and every poster shares
+        // that delegate. Ours must not look like a release notice.
+        try await withIsolatedMonitor { monitor, notifier, _ in
+            await seedBaseline(monitor)
+            await monitor.record(
+                providerID: "claude", providerName: "Claude", planLabel: "Max 20x",
+                baselineIsTrusted: true,
+                observations: [weeklyObservation(afterEarlyReset)],
+                now: now
+            )
+            let identifier = try #require(notifier.posts.first?.identifier)
+            #expect(identifier.hasPrefix("EarlyQuotaReset."))
+            #expect(!identifier.hasPrefix(UpdateChecker.notificationIdentifierPrefix))
+        }
+    }
+
     @Test("Denied authorization posts nothing")
     func deniedAuthorizationPostsNothing() async throws {
         try await withIsolatedMonitor { monitor, notifier, _ in
