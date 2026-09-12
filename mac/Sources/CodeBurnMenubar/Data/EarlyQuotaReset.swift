@@ -59,26 +59,50 @@ struct EarlyQuotaResetEvent: Codable, Equatable, Sendable {
         "\(providerID)|\(windowKey)|\(Int(scheduledResetAt.timeIntervalSince1970.rounded()))"
     }
 
-    var notificationTitle: String { "\(providerName) quota reset early" }
+    var notificationTitle: String {
+        switch signal {
+        case .resetMovedForward: "\(providerName) quota reset early"
+        case .usageDropped: "\(providerName) quota cleared early"
+        }
+    }
 
     var notificationBody: String {
-        let remaining = Int((100 - percentAfter).rounded())
-        return "\(providerName)'s \(windowName) reset "
-            + "\(EarlyQuotaResetFormat.lead(seconds: earlyBySeconds)) early. "
-            + "You're back to \(remaining)%."
+        let lead = EarlyQuotaResetFormat.lead(seconds: earlyBySeconds)
+        let back = "You're back to \(Int((100 - percentAfter).rounded()))%."
+        switch signal {
+        case .resetMovedForward:
+            return "\(providerName)'s \(windowName) reset \(lead) early. \(back)"
+        // The reset time did not move: the vendor emptied the counter inside the
+        // cycle, which still ends when it always would have. Saying "reset early"
+        // here would promise a whole new window that is not coming.
+        case .usageDropped:
+            return "\(providerName) cleared your \(EarlyQuotaResetFormat.usageName(windowName)) "
+                + "\(lead) before its reset. \(back)"
+        }
     }
 
     /// The Capacity Dock band, e.g. "Weekly limit reset 18h early".
     var noticeText: String {
-        "\(EarlyQuotaResetFormat.capitalizedFirst(windowName)) reset "
-            + "\(EarlyQuotaResetFormat.lead(seconds: earlyBySeconds)) early"
+        let lead = EarlyQuotaResetFormat.lead(seconds: earlyBySeconds)
+        switch signal {
+        case .resetMovedForward:
+            return "\(EarlyQuotaResetFormat.capitalizedFirst(windowName)) reset \(lead) early"
+        case .usageDropped:
+            let usage = EarlyQuotaResetFormat.usageName(windowName)
+            return "\(EarlyQuotaResetFormat.capitalizedFirst(usage)) cleared, \(lead) before reset"
+        }
     }
 
     var noticeHelpText: String {
-        let remaining = Int((100 - percentAfter).rounded())
-        return "\(providerName) reset this \(windowName) "
-            + "\(EarlyQuotaResetFormat.lead(seconds: earlyBySeconds)) before its scheduled time. "
-            + "\(remaining)% of it was available when CodeBurn noticed."
+        let lead = EarlyQuotaResetFormat.lead(seconds: earlyBySeconds)
+        let available = "\(Int((100 - percentAfter).rounded()))% of it was available when CodeBurn noticed."
+        switch signal {
+        case .resetMovedForward:
+            return "\(providerName) reset this \(windowName) \(lead) before its scheduled time. \(available)"
+        case .usageDropped:
+            return "\(providerName) cleared this \(EarlyQuotaResetFormat.usageName(windowName)) "
+                + "\(lead) before the window's scheduled reset, which has not moved. \(available)"
+        }
     }
 }
 
@@ -227,9 +251,7 @@ enum EarlyQuotaResetHistory {
 
         /// Hover-card caption, e.g. "Last 3 weekly resets came ~18h early".
         var caption: String {
-            let noun = windowName.hasSuffix(" limit")
-                ? String(windowName.dropLast(" limit".count))
-                : windowName
+            let noun = EarlyQuotaResetFormat.windowNoun(windowName)
             let lead = EarlyQuotaResetFormat.approximateLead(seconds: typicalEarlyBySeconds)
             if earlyResets == 1 && observedResets == 1 {
                 return "Last \(noun) reset came ~\(lead) early"
@@ -320,16 +342,15 @@ enum EarlyQuotaResetFormat {
         }
     }
 
-    /// "2d 3h", "18h", "40m" — precise enough for a single event.
+    /// "2d 3h", "18h", "40m" — rounded to the unit it prints, so a lead of
+    /// 1h57m reads "2h" rather than truncating to "1h".
     static func lead(seconds: TimeInterval) -> String {
-        let minutes = Int(max(0, seconds) / 60)
-        let hours = minutes / 60
-        if hours >= 24 {
-            let rest = hours % 24
-            return rest == 0 ? "\(hours / 24)d" : "\(hours / 24)d \(rest)h"
-        }
-        if hours >= 1 { return "\(hours)h" }
-        return "\(max(minutes, 1))m"
+        let seconds = max(0, seconds)
+        guard seconds >= 3600 else { return "\(max(Int((seconds / 60).rounded()), 1))m" }
+        let hours = Int((seconds / 3600).rounded())
+        guard hours >= 24 else { return "\(hours)h" }
+        let rest = hours % 24
+        return rest == 0 ? "\(hours / 24)d" : "\(hours / 24)d \(rest)h"
     }
 
     /// "18h", "2d" — rounded, for a pattern that is only ever approximate.
@@ -338,6 +359,14 @@ enum EarlyQuotaResetFormat {
         if hours >= 48 { return "\(Int((seconds / 86400).rounded()))d" }
         return "\(max(hours, 1))h"
     }
+
+    /// "weekly limit" -> "weekly": the bare noun, for copy that supplies its own.
+    static func windowNoun(_ name: String) -> String {
+        name.hasSuffix(" limit") ? String(name.dropLast(" limit".count)) : name
+    }
+
+    /// "weekly limit" -> "weekly usage": what the vendor cleared, not the cap.
+    static func usageName(_ name: String) -> String { "\(windowNoun(name)) usage" }
 
     static func capitalizedFirst(_ text: String) -> String {
         guard let first = text.first else { return text }

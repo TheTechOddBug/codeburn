@@ -67,6 +67,14 @@ struct EarlyQuotaResetDetectorTests {
         ))
         #expect(event.signal == .usageDropped)
         #expect(event.earlyBySeconds == eighteenHours)
+        // The reset time stood still, so this copy must not promise a new cycle.
+        #expect(event.notificationTitle == "Claude quota cleared early")
+        #expect(event.notificationBody
+            == "Claude cleared your weekly usage 18h before its reset. You're back to 99%.")
+        #expect(event.noticeText == "Weekly usage cleared, 18h before reset")
+        for text in [event.notificationTitle, event.notificationBody, event.noticeText, event.noticeHelpText] {
+            #expect(!text.contains("reset early"))
+        }
     }
 
     @Test("Both signals describe the same cut-short cycle, so they coalesce to one identity")
@@ -241,6 +249,28 @@ struct EarlyQuotaResetDetectorTests {
         #expect(EarlyQuotaResetDetector.detect(
             previous: reading(percent: 80, resetsIn: 18 * 3600, observedAgo: 300),
             current: reading(percent: 0, resetsIn: 18 * 3600 + 1800),
+            context: context()
+        ) == nil)
+    }
+
+    @Test("The lead rounds to the unit it prints")
+    func leadRounds() {
+        // 1h57m is nearer two hours than one; truncating read it as "1h".
+        #expect(EarlyQuotaResetFormat.lead(seconds: 7020) == "2h")
+        #expect(EarlyQuotaResetFormat.lead(seconds: 18 * 3600) == "18h")
+        #expect(EarlyQuotaResetFormat.lead(seconds: 2 * 86400 + 12 * 3600 + 47 * 60) == "2d 13h")
+        #expect(EarlyQuotaResetFormat.lead(seconds: 35 * 60) == "35m")
+        #expect(EarlyQuotaResetFormat.lead(seconds: 2 * 86400) == "2d")
+    }
+
+    @Test("A reset time that jumps less than a window is not a new cycle")
+    func partialWindowJumpIsSilent() {
+        // Four days on from a weekly cycle we last saw moments ago is nowhere
+        // near a full window after that look, so it is not a cycle boundary
+        // however far the reset time moved.
+        #expect(EarlyQuotaResetDetector.detect(
+            previous: reading(percent: 80, resetsIn: 18 * 3600, observedAgo: 300),
+            current: reading(percent: 0, resetsIn: 4 * 24 * 3600),
             context: context()
         ) == nil)
     }
@@ -547,11 +577,13 @@ struct EarlyQuotaResetMonitorTests {
                 observations: [weeklyObservation(afterEarlyReset)],
                 now: now
             )
-            let stillVisible = EarlyQuotaResetNotice.visibleSeconds - 60
-            #expect(monitor.visibleEvent(providerID: "claude", now: now.addingTimeInterval(stillVisible)) != nil)
+            // Literal twelve hours: reading the constant back would pin nothing.
+            let twelveHours: TimeInterval = 12 * 3600
             #expect(monitor.visibleEvent(
-                providerID: "claude",
-                now: now.addingTimeInterval(EarlyQuotaResetNotice.visibleSeconds + 60)
+                providerID: "claude", now: now.addingTimeInterval(twelveHours - 60)
+            ) != nil)
+            #expect(monitor.visibleEvent(
+                providerID: "claude", now: now.addingTimeInterval(twelveHours + 60)
             ) == nil)
         }
     }
