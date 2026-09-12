@@ -827,6 +827,8 @@ describe('project filter', () => {
       const handlers = createBridgeHandlers(deps({ spawnCli, spawnCliAction, resolveCodeburnPath: () => '/bin/codeburn' }))
       await handlers['codeburn:getSessions']!('week', 'all')
       expect(calls[0]).toEqual(['sessions', '--format', 'json', '--period', 'week', '--project=my-company', '--exclude=scratch'])
+      await handlers['codeburn:getSessionsContributions']!('week', 'all')
+      expect(calls[1]).toEqual(['sessions', '--format', 'json', '--contributions', '--period', 'week', '--project=my-company', '--exclude=scratch'])
     })
   })
 

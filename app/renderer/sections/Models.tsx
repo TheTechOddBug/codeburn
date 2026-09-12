@@ -293,9 +293,9 @@ function ModelTableRow({ row, onAddAlias, onInvestigate }: { row: ModelReportRow
     background: seriesColorForModel(row.modelDisplayName || row.model),
     marginRight: 8,
   }
-  // The fold group's canonical short names: the row's own key plus every raw
-  // id folded into it, so the chip matches every session under this row.
-  const drillModelKeys = [row.model, ...row.rawModels].filter(Boolean)
+  // Contribution segments are keyed by the canonical short name, which is what
+  // modelDisplayName carries; the raw provider ids never match a segment.
+  const drillModelKeys = [row.modelDisplayName].filter(Boolean)
 
   return (
     <tr>
@@ -328,7 +328,7 @@ function ModelGroupRow({ rows, onAddAlias, onInvestigate }: { rows: ModelReportR
   const costUSD = rows.reduce((sum, row) => sum + row.costUSD, 0)
   const savingsUSD = rows.reduce((sum, row) => sum + row.savingsUSD, 0)
   const unpriced = costUSD === 0 && savingsUSD === 0
-  const drillModelKeys = [...new Set(rows.flatMap(row => [row.model, ...row.rawModels]))].filter(Boolean)
+  const drillModelKeys = [...new Set(rows.map(row => row.modelDisplayName))].filter(Boolean)
 
   return (
     <tr className="model-group-row">
