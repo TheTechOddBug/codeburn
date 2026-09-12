@@ -192,6 +192,18 @@ struct LocalizationCoverageTests {
         )
     }
 
+    @Test("status-item tooltips and notification copy count too")
+    func flagsTooltipsAndNotifications() {
+        let source = """
+        button.toolTip = "Quota window nearly exhausted"
+        notifier.post(title: "Codex banked a limit reset", body: body)
+        """
+        #expect(
+            LocalizationSourceScanner.unroutedLiterals(inSource: source, fileName: "V.swift")
+                .map(\.literal) == ["Quota window nearly exhausted", "Codex banked a limit reset"]
+        )
+    }
+
     @Test("figures, symbols and empty placeholders are not translation failures")
     func ignoresNonWords() {
         let source = """

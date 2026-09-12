@@ -61,6 +61,10 @@ enum LocalizationSourceScanner {
         ".informativeText =",
         "addButton(withTitle:",
         ".title =",
+        ".toolTip =",
+        // Notification copy, which the notifier hands straight to
+        // UNMutableNotificationContent.
+        "post(title:",
         // This app's own section-header helper.
         "sectionCaption(",
     ]
