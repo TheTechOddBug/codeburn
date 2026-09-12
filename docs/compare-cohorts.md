@@ -19,7 +19,11 @@ on the same kind of work, over a population you can inspect?**
   Supplementary accounting for that model remains part of its cost and token
   totals, without adding observations or changing behavioral ownership.
 * Edit turns whose behavioral calls span **two or more models** are excluded
-  from both cohorts, counted, and shown with their combined cost.
+  from both cohorts, counted, and shown with their combined cost. This is the
+  one place cohort counts diverge from `compare --format json`, which owns a
+  turn by its *first* behavioral call (`primaryTurnModel`, `src/compare-stats.ts`)
+  and so still counts a mixed turn for that first model. Cohort observations
+  therefore equal a model's `editTurns` except for mixed turns it led.
 * An edit turn with no behavioral model call at all is excluded the same way.
 * A `$0` cost on a model the pricing rules do not declare free (local models,
   subscription SKUs, explicit zero-rate overrides) is **unknown cost, not zero**:
@@ -38,9 +42,9 @@ In order, before any metric:
 2. **Inspect samples** — the declared population itself, one row per
    observation (timestamp, project, session, category, cost, input / output /
    context-proxy tokens, retries). Every number on the page is reproducible
-   from this list. Activating a row also hands the sample to the shared
-   navigation when one is registered (`app/renderer/lib/sampleNavigation.ts`);
-   the section is fully usable without it.
+   from this list. Activating a row drills through to the owning session with
+   the shared investigation navigation, keyed by the same provider/project/
+   session triple the sessions report uses.
 3. **Cost per edit turn** — median, P90, mean over cost-known observations, the
    one-shot rate and retry rate over the declared population (zero *observed*
    retries never proves code correctness), and a compact cost histogram whose

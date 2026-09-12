@@ -23,7 +23,7 @@
 import type { ClassifiedTurn, ProjectSummary, TaskCategory } from './types.js'
 import { CATEGORY_LABELS } from './types.js'
 import { isBehavioralCall } from './behavioral-weight.js'
-import { callBillableOutputTokens } from './session-output.js'
+import { callBillableOutputTokens, inferSessionProvider } from './session-output.js'
 import { getShortModelName, isExpectedFreeModel } from './models.js'
 import { aggregateModelStats, findModelStat, type ModelStats } from './compare-stats.js'
 import { spendProjectIdentity } from './spend-flow.js'
@@ -47,10 +47,12 @@ function behavioralCostByModel(turn: ClassifiedTurn): Map<string, number> {
 }
 
 export type CohortObservation = {
-  /** Owning session id. Not globally unique by itself: pair with `project` for
-   *  identity, per the app's canonical-identity rules. */
+  /** Owning session id. Not globally unique by itself: pair with `provider` and
+   *  `project` for identity, per the app's canonical-identity rules. */
   sessionId: string
-  /** Project label exactly as reports print it (`ProjectSummary.project`). */
+  /** Same provider/project/session triple the sessions report keys rows by, so
+   *  drill-through resolves an observation to exactly one session row. */
+  provider: string
   project: string
   timestamp: string
   category: TaskCategory
@@ -145,7 +147,7 @@ export function extractCohortObservations(
           const cost = [...byModel.values()].reduce((sum, c) => sum + c, 0)
           exclusions.multiModelTurns.push({
             sessionId: session.sessionId,
-            project: project.project,
+            project: session.project || project.project,
             timestamp: turn.timestamp,
             category: turn.category,
             models,
@@ -184,7 +186,8 @@ export function extractCohortObservations(
         const acc = cohortFor(model)
         acc.push({
           sessionId: session.sessionId,
-          project: project.project,
+          provider: inferSessionProvider(session),
+          project: session.project || project.project,
           timestamp: turn.timestamp,
           category: turn.category,
           model,

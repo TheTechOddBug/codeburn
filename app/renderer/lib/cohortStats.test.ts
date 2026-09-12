@@ -12,6 +12,7 @@ import type { CohortObservation } from './types'
 function obs(over: Partial<CohortObservation> = {}): CohortObservation {
   return {
     sessionId: 's1',
+    provider: 'claude',
     project: 'proj-a',
     timestamp: '2026-08-15T10:00:00Z',
     category: 'coding',

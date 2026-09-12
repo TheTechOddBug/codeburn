@@ -11,6 +11,7 @@ import {
   selectCohortProjects,
   type CohortObservation,
 } from '../src/compare-cohorts.js'
+import { aggregateSessions } from '../src/sessions-report.js'
 import { findModelStat } from '../src/compare-stats.js'
 import { getShortModelName } from '../src/models.js'
 import type { ClassifiedTurn, ProjectSummary, SessionSummary } from '../src/types.js'
@@ -238,6 +239,14 @@ describe('extractCohortObservations', () => {
     // Two sessions share the literal id; distinct sessions must be 2.
     expect(stats.distinctSessionCount).toBe(2)
     expect(stats.observationCount).toBe(2)
+  })
+
+  it('carries the same provider/project/session triple the sessions report keys rows by', () => {
+    const project = makeProject('s1', [makeTurn('opus-4-6', 0.10)], 'proj-a')
+    const [observation] = extractCohortObservations({ projects: [project] }).perModel.get('opus-4-6') ?? []
+    const [row] = aggregateSessions([project])
+    expect([observation?.provider, observation?.project, observation?.sessionId])
+      .toEqual([row?.provider, row?.project, row?.sessionId])
   })
 })
 

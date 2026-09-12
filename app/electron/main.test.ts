@@ -860,6 +860,14 @@ describe('project filter', () => {
       // contribution row either.
       await handlers['codeburn:getPeriodCompareSessions']!(rangeA, rangeB, 'all', 'model', 'sonnet')
       expect(calls[4]).toEqual(['compare-periods', '--format', 'sessions', '--from-a', '2026-07-01', '--to-a', '2026-07-07', '--from-b', '2026-07-08', '--to-b', '2026-07-14', '--project=my-company', '--exclude=scratch', '--dimension', 'model', '--key', 'sonnet'])
+      await handlers['codeburn:getCompareCohortModels']!('week', 'all')
+      expect(calls[5]).toEqual(['compare', '--format', 'cohort-json', '--period', 'week', '--project=my-company', '--exclude=scratch'])
+      // --project-id narrows WITHIN the saved filter; it never replaces it.
+      await handlers['codeburn:getCompareCohort']!('week', 'all', 'model-a', 'model-b', undefined, ['/Users/gone/alpha'])
+      expect(calls[6]).toEqual([
+        'compare', '--format', 'cohort-json', '--period', 'week', '--project=my-company', '--exclude=scratch',
+        '--model-a', 'model-a', '--model-b', 'model-b', '--project-id=/Users/gone/alpha',
+      ])
     })
   })
 

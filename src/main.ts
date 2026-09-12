@@ -2258,7 +2258,13 @@ program
       process.exit(1)
     }
     await loadPricing()
-    const customRange = parseDateRangeFlags(opts.from, opts.to)
+    let customRange: DateRange | null = null
+    try {
+      customRange = parseDateRangeFlags(opts.from, opts.to)
+    } catch (err) {
+      console.error(`\n  Error: ${err instanceof Error ? err.message : String(err)}\n`)
+      process.exit(1)
+    }
     const { range, label } = customRange
       ? { range: customRange, label: formatDateRangeLabel(opts.from, opts.to) }
       : getDateRange(opts.period)

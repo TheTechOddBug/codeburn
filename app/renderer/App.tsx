@@ -943,7 +943,7 @@ function AppMain() {
               ) : section === 'models' ? (
                 <Models period={period} provider={provider} range={customRange} refreshToken={refreshToken} onNavigate={navigate} onInvestigate={investigate} ready={ready} />
               ) : section === 'compare' ? (
-                <Compare period={period} provider={provider} range={customRange} refreshToken={refreshToken} ready={ready} />
+                <Compare period={period} provider={provider} range={customRange} refreshToken={refreshToken} ready={ready} onInvestigate={investigate} />
               ) : section === 'periods' ? (
                 <PeriodCompare provider={provider} refreshToken={refreshToken} ready={ready} onInspectContribution={inspectContribution} />
               ) : (

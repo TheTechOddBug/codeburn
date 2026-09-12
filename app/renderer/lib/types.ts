@@ -733,6 +733,7 @@ export type CompareJsonReport = {
  *  another model's, never the session total). */
 export type CohortObservation = {
   sessionId: string
+  provider: string
   project: string
   timestamp: string
   category: string

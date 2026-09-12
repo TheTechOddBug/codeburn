@@ -17,8 +17,10 @@ import {
 import { formatCompact, formatUsd, shortenProjectPath } from '../lib/format'
 import { codeburn } from '../lib/ipc'
 import { reportMemoKey } from '../lib/reportMemoKey'
-import { openSample } from '../lib/sampleNavigation'
+import { sessionFilters } from '../lib/investigation'
 import { trackEvent } from '../lib/track'
+import type { InvestigateRequest } from './Overview'
+import { sessionRowKey } from './Sessions'
 import type {
   CohortComparisonReport,
   CohortModelReport,
@@ -57,12 +59,14 @@ export function Compare({
   range = null,
   refreshToken = 0,
   ready = true,
+  onInvestigate,
 }: {
   period: Period
   provider: string
   range?: DateRange | null
   refreshToken?: number
   ready?: boolean
+  onInvestigate?: (request: InvestigateRequest) => void
 }) {
   const [mode, setMode] = useState<CompareMode>('classic')
 
@@ -79,7 +83,7 @@ export function Compare({
             onChange={next => setMode(next as CompareMode)}
           />
         </div>
-        <CohortCompare period={period} provider={provider} range={range} refreshToken={refreshToken} ready={ready} />
+        <CohortCompare period={period} provider={provider} range={range} refreshToken={refreshToken} ready={ready} onInvestigate={onInvestigate} />
       </div>
     )
   }
@@ -375,12 +379,14 @@ function CohortCompare({
   range,
   refreshToken,
   ready,
+  onInvestigate,
 }: {
   period: Period
   provider: string
   range: DateRange | null
   refreshToken: number
   ready: boolean
+  onInvestigate?: (request: InvestigateRequest) => void
 }) {
   const facets = usePolled(
     () => codeburn.getCompareCohortModels(period, provider, range ?? undefined),
@@ -477,13 +483,16 @@ function CohortCompare({
         behavioral model; turns mixing models are excluded and counted below.
       </p>
       {modelA && modelB && modelA !== modelB && (
-        <CohortReport report={report} />
+        <CohortReport report={report} onInvestigate={onInvestigate} />
       )}
     </>
   )
 }
 
-function CohortReport({ report }: { report: ReturnType<typeof usePolled<CohortComparisonReport>> }) {
+function CohortReport({ report, onInvestigate }: {
+  report: ReturnType<typeof usePolled<CohortComparisonReport>>
+  onInvestigate?: (request: InvestigateRequest) => void
+}) {
   const [band, setBand] = useState<VolumeBand | null>(null)
 
   if (!report.data) {
@@ -509,8 +518,8 @@ function CohortReport({ report }: { report: ReturnType<typeof usePolled<CohortCo
         <VolumeCard title="Token volume (median · P90)" side={sideB} />
       </div>
       <div className="cmp-pair">
-        <SampleInspector side={sideA} />
-        <SampleInspector side={sideB} />
+        <SampleInspector side={sideA} onInvestigate={onInvestigate} />
+        <SampleInspector side={sideB} onInvestigate={onInvestigate} />
       </div>
     </div>
   )
@@ -737,10 +746,13 @@ function fmtVolume(value: number | null): string {
   return value === null ? '—' : formatCompact(value)
 }
 
-/** Inspect samples: the declared population, inspectable row by row. Renders
- *  inline (self-contained); activating a row also hands it to the shared
- *  navigation adapter when one is registered (sampleNavigation.ts contract). */
-function SampleInspector({ side }: { side: CohortSide }) {
+/** Inspect samples: the declared population, inspectable row by row. Activating
+ *  a row drills through to the owning session with the shared investigation
+ *  navigation, keyed by the same provider/project/session triple Sessions uses. */
+function SampleInspector({ side, onInvestigate }: {
+  side: CohortSide
+  onInvestigate?: (request: InvestigateRequest) => void
+}) {
   const [showAll, setShowAll] = useState(false)
   const observations = useMemo(
     () => [...side.kept].sort((a, b) => b.costUSD - a.costUSD || a.timestamp.localeCompare(b.timestamp)),
@@ -761,7 +773,7 @@ function SampleInspector({ side }: { side: CohortSide }) {
       ) : (
         <div className="cmp-samples">
           {visible.map((observation, index) => (
-            <SampleRow key={`${observation.sessionId}-${observation.timestamp}-${index}`} observation={observation} />
+            <SampleRow key={`${observation.sessionId}-${observation.timestamp}-${index}`} observation={observation} onInvestigate={onInvestigate} />
           ))}
           {observations.length > SAMPLES_INITIAL_COUNT && (
             <button type="button" className="cmp-samples-more" onClick={() => setShowAll(current => !current)}>
@@ -774,13 +786,19 @@ function SampleInspector({ side }: { side: CohortSide }) {
   )
 }
 
-function SampleRow({ observation }: { observation: CohortObservation }) {
+function SampleRow({ observation, onInvestigate }: {
+  observation: CohortObservation
+  onInvestigate?: (request: InvestigateRequest) => void
+}) {
   const activate = () => {
-    openSample({ sessionId: observation.sessionId, project: observation.project, timestamp: observation.timestamp })
+    onInvestigate?.({
+      filters: sessionFilters({ provider: observation.provider, sessionId: observation.sessionId }),
+      sessionId: sessionRowKey(observation),
+    })
   }
   return (
     <button type="button" className="cmp-sample" onClick={activate}
-      title={`Open sample in navigation: ${observation.project}/${observation.sessionId}`}
+      title={`Open session: ${observation.project}/${observation.sessionId}`}
       aria-label={`Sample from ${shortenProjectPath(observation.project)} at ${observation.timestamp}`}>
       <span className="cmp-sample-time">{observation.timestamp.slice(0, 16).replace('T', ' ')}</span>
       <span className="cmp-sample-project" title={observation.project}>{shortenProjectPath(observation.project)}</span>

@@ -156,10 +156,10 @@ const cohortReport: CohortComparisonReport = {
       volume: { outputMedian: 500, outputP90: 900, inputMedian: 1000, inputP90: 2000, contextProxyMedian: 3000, contextProxyP90: 5000, missingMeasureCount: 0 },
     },
     observations: [
-      { sessionId: 's1', project: '/work/app', timestamp: '2026-08-14T10:00:00Z', category: 'coding', model: 'Opus 4.8', costUSD: 1, costKnown: true, retries: 1, oneShot: false, inputTokens: 1000, outputTokens: 500, cacheReadTokens: 2000, cacheWriteTokens: 100, contextProxyTokens: 3000, tokensReported: true },
-      { sessionId: 's1', project: '/work/app', timestamp: '2026-08-14T11:00:00Z', category: 'coding', model: 'Opus 4.8', costUSD: 2, costKnown: true, retries: 0, oneShot: true, inputTokens: 1200, outputTokens: 600, cacheReadTokens: 2200, cacheWriteTokens: 100, contextProxyTokens: 3400, tokensReported: true },
-      { sessionId: 's2', project: '/work/kit', timestamp: '2026-08-15T10:00:00Z', category: 'debugging', model: 'Opus 4.8', costUSD: 4, costKnown: true, retries: 2, oneShot: false, inputTokens: 1500, outputTokens: 800, cacheReadTokens: 3000, cacheWriteTokens: 100, contextProxyTokens: 4500, tokensReported: true },
-      { sessionId: 's2', project: '/work/kit', timestamp: '2026-08-15T11:00:00Z', category: 'coding', model: 'Opus 4.8', costUSD: 8, costKnown: true, retries: 0, oneShot: true, inputTokens: 4000, outputTokens: 900, cacheReadTokens: 5000, cacheWriteTokens: 100, contextProxyTokens: 9000, tokensReported: true },
+      { sessionId: 's1', provider: 'claude', project: '/work/app', timestamp: '2026-08-14T10:00:00Z', category: 'coding', model: 'Opus 4.8', costUSD: 1, costKnown: true, retries: 1, oneShot: false, inputTokens: 1000, outputTokens: 500, cacheReadTokens: 2000, cacheWriteTokens: 100, contextProxyTokens: 3000, tokensReported: true },
+      { sessionId: 's1', provider: 'claude', project: '/work/app', timestamp: '2026-08-14T11:00:00Z', category: 'coding', model: 'Opus 4.8', costUSD: 2, costKnown: true, retries: 0, oneShot: true, inputTokens: 1200, outputTokens: 600, cacheReadTokens: 2200, cacheWriteTokens: 100, contextProxyTokens: 3400, tokensReported: true },
+      { sessionId: 's2', provider: 'claude', project: '/work/kit', timestamp: '2026-08-15T10:00:00Z', category: 'debugging', model: 'Opus 4.8', costUSD: 4, costKnown: true, retries: 2, oneShot: false, inputTokens: 1500, outputTokens: 800, cacheReadTokens: 3000, cacheWriteTokens: 100, contextProxyTokens: 4500, tokensReported: true },
+      { sessionId: 's2', provider: 'claude', project: '/work/kit', timestamp: '2026-08-15T11:00:00Z', category: 'coding', model: 'Opus 4.8', costUSD: 8, costKnown: true, retries: 0, oneShot: true, inputTokens: 4000, outputTokens: 900, cacheReadTokens: 5000, cacheWriteTokens: 100, contextProxyTokens: 9000, tokensReported: true },
     ],
     exclusions: { multiModelTurnCount: 1, combinedMultiModelCostUSD: 0.15, noBehavioralModelTurns: 0 },
   },
@@ -208,9 +208,9 @@ describe('Compare cohorts mode', () => {
     mocks.getCompareCohort.mockResolvedValue(cohortReport)
   })
 
-  async function openCohorts() {
+  async function openCohorts(onInvestigate?: (request: unknown) => void) {
     const user = userEvent.setup()
-    render(<Compare period="30days" provider="all" />)
+    render(<Compare period="30days" provider="all" onInvestigate={onInvestigate as never} />)
     await user.click(await screen.findByRole('tab', { name: 'Cohorts' }))
     await screen.findByLabelText('Cohort first model')
     await screen.findByLabelText('Cohort second model')
@@ -268,7 +268,7 @@ describe('Compare cohorts mode', () => {
         observations: [
           cohortReport.modelA.observations[0]!,
           cohortReport.modelA.observations[1]!,
-          { sessionId: 's3', project: '/work/app', timestamp: '2026-08-16T10:00:00Z', category: 'coding', model: 'Opus 4.8', costUSD: 0.5, costKnown: true, retries: 0, oneShot: true, inputTokens: 0, outputTokens: 0, cacheReadTokens: 0, cacheWriteTokens: 0, contextProxyTokens: 0, tokensReported: false },
+          { sessionId: 's3', provider: 'claude', project: '/work/app', timestamp: '2026-08-16T10:00:00Z', category: 'coding', model: 'Opus 4.8', costUSD: 0.5, costKnown: true, retries: 0, oneShot: true, inputTokens: 0, outputTokens: 0, cacheReadTokens: 0, cacheWriteTokens: 0, contextProxyTokens: 0, tokensReported: false },
         ],
       },
     }
@@ -284,6 +284,16 @@ describe('Compare cohorts mode', () => {
     // carries the original stats object, hence 4). The first Inspect samples
     // card is model A's.
     expect(screen.getAllByText('Inspect samples')[0]!.closest('.cmp-card')).toHaveTextContent('2 of 4 in selection')
+  })
+
+  it('drills a sample through to its session with the shared investigation key', async () => {
+    const onInvestigate = vi.fn()
+    const user = await openCohorts(onInvestigate)
+    await user.click(screen.getAllByTitle(/^Open session: /)[0]!)
+    expect(onInvestigate).toHaveBeenCalledWith({
+      filters: expect.objectContaining({ sessions: [{ provider: 'claude', sessionId: 's2' }] }),
+      sessionId: 'claude\u0000/work/kit\u0000s2',
+    })
   })
 
   it('returns to the classic comparison unchanged', async () => {

@@ -627,10 +627,14 @@ export function createBridgeHandlers(deps: Deps = { spawnCli, spawnCliAction, re
     // for two models over an explicit selection. Same `compare` command, new
     // cohort-json format; project identities are exact, category is one id.
     'codeburn:getCompareCohortModels': run((period: string, provider: string, range?: DateRange) => [
-      'compare', '--format', 'cohort-json', '--period', vPeriod(period), ...providerArgs(vProvider(provider)), ...rangeArgs(vRange(range)),
+      'compare', '--format', 'cohort-json', '--period', vPeriod(period), ...providerArgs(vProvider(provider)),
+      ...projectArgs(), ...rangeArgs(vRange(range)),
     ], 3),
+    // The saved project filter still scopes the population; --project-id then
+    // narrows it further to one identity the facet report offered.
     'codeburn:getCompareCohort': run((period: string, provider: string, modelA: string, modelB: string, range?: DateRange, projects?: string[], category?: string) => [
       'compare', '--format', 'cohort-json', '--period', vPeriod(period), ...providerArgs(vProvider(provider)),
+      ...projectArgs(),
       '--model-a', vToken(modelA), '--model-b', vToken(modelB), ...rangeArgs(vRange(range)),
       ...(vProjectIds(projects)), ...(category ? ['--category', vCategory(category)] : []),
     ], 7),
@@ -936,14 +940,6 @@ function bootstrap(): void {
   process.on('unhandledRejection', reason => {
     console.error('Unhandled promise rejection in main process:', reason)
   })
-
-  // Opt-in profile isolation for parallel dev/verification runs: a distinct
-  // userData dir also isolates serve.pid, the single-instance lock and telemetry
-  // state, so two checkouts can run Electron side by side. Unset by default —
-  // normal launches keep the OS default profile.
-  if (process.env.CODEBURN_USER_DATA_DIR) {
-    app.setPath('userData', process.env.CODEBURN_USER_DATA_DIR)
-  }
 
   // Packaged builds ship their own version-matched CLI under resources/cli (the
   // afterPack hook copies it in). Point the resolver at the launch shim before
