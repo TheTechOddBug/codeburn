@@ -979,6 +979,10 @@ function sessionDetailsOf(sessions: SessionSummary[]): PayloadSessionDetail[] {
         .map(([name, m]) => ({ name, cost: m.costUSD, savingsUSD: m.savingsUSD }))
         .sort((a, b) => b.cost - a.cost)
         .slice(0, 3),
+      // Drill-through identity (additive, optional): provider + session id let
+      // the desktop open the exact session, not a lookalike row.
+      ...(s.sessionId ? { sessionId: s.sessionId } : {}),
+      ...(s.sessionId ? { provider: inferSessionProvider(s) } : {}),
     }))
 }
 
@@ -1559,6 +1563,13 @@ export async function buildMenubarPayloadForRange(periodInfo: PeriodInfo, opts: 
       savingsUSD: s.totalSavingsUSD,
       calls: s.apiCalls,
       date: s.firstTimestamp?.split('T')[0] ?? '',
+      // Drill-through identity (additive): provider + id let the desktop open
+      // the exact session even when another provider reuses the id or title.
+      // `projectKey` is the RAW session project (the sessions-list row key);
+      // `project` above stays the friendly display name.
+      sessionId: s.sessionId,
+      provider: inferSessionProvider(s),
+      projectKey: s.project || p.project,
     }))
   ).sort((a, b) => (b.cost + b.savingsUSD) - (a.cost + a.savingsUSD)).slice(0, 5)
 
