@@ -362,14 +362,9 @@ Rung 4 costs a process spawn, so its answer is cached for `probeCacheTTL`
 `hasCredential` is the cheap eligibility answer and never spawns: it
 approximates rung 4 with an installed `gh` binary.
 
-The CLI (`src/quota/copilot.ts`) implements rungs 1, 3 and 4 — the sources a
-CLI can reach — in that order, so `codeburn quota` and the Windows Capacity
-Dock follow the same host each rung names. Its rung 4 reads the `oauth_token`
-out of `hosts.yml` instead of spawning gh, so the token and the host come from
-one entry; a keyring-backed gh login has no token in that file and falls
-through. Rung 5 is macOS-only: it lives in that app's keychain item, which has
-no CLI equivalent. The Electron surface (`app/electron/quota/copilot.ts`) still
-implements only rung 1.
+Rungs 2 to 5 are the menubar's. The CLI (`src/quota/copilot.ts`) and the
+Electron surface (`app/electron/quota/copilot.ts`) still implement only rung 1,
+whose files already carry the host their token belongs to.
 
 ### GitHub Enterprise Cloud hosts (`*.ghe.com`)
 
@@ -383,8 +378,8 @@ api.github.com. So a credential carries the host it was read from —
 to `https://api.github.com/copilot_internal/user` for `github.com` or for a
 source that genuinely carries none (an app-name `apps.json` key, an
 environment token with no `GH_HOST`, a gh login with no `hosts.yml` entry, a
-pasted token saved before the host field existed). Every rung can name a
-tenant: the credential files are keyed by host, the environment rung reads
+pasted token saved before the host field existed). Every menubar rung can name
+a tenant: the credential files are keyed by host, the environment rung reads
 `GH_HOST`, the gh rung reads gh's `hosts.yml`, and the pasted rung saves the
 host beside the token (#1306). The token and the host
 always come from the same entry: with several hosts signed in, `github.com`
@@ -397,7 +392,8 @@ must never receive it. Every host source is untrusted text, `GH_HOST`, gh's
 `hosts.yml` keys and the pasted host included: the normalized host is
 character-validated before any URL is built, because a value like
 `evil.com?.ghe.com` passes the `.ghe.com` suffix check but would build a URL
-whose host is `api.evil.com` and hand it the Authorization header. Unreachable-host and HTTP failures name the host tried,
+whose host is `api.evil.com` and hand it the Authorization header.
+Unreachable-host and HTTP failures name the host tried,
 so the symptom is no longer a bare "Temporarily unavailable". Settings shows
 which host answered in the Copilot connection row. `CopilotHostEndpoint`
 (macOS) and the exported helpers in `src/quota/copilot.ts` (CLI) hold the
