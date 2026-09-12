@@ -135,17 +135,14 @@ enum QuotaPacePresentation {
     }
 
     /// Whether the panel must reserve a pace slot under the window columns.
-    /// Deliberately time-independent: the slot is reserved whenever connected
-    /// data carries a displayable window with validated duration and a reset
-    /// date, even while the caption itself is still empty (window younger
-    /// than 3%). Reserving on data alone keeps the computed panel height from
-    /// changing under the pointer as wall-clock time crosses a threshold.
-    static func reservesLine(
-        for windows: [QuotaSummary.Window],
-        connection: QuotaSummary.Connection
-    ) -> Bool {
-        guard connection == .connected else { return false }
-        return windows.contains { window in
+    /// Deliberately independent of both wall-clock time and connection state:
+    /// the slot is reserved whenever a displayed window carries a validated
+    /// duration and a reset date, even while the caption itself is empty (a
+    /// window younger than 3%, a stale sample, a refresh in flight). Reserving
+    /// on shape alone keeps the computed panel height from changing under the
+    /// pointer every time a refresh or a freshness horizon flips the caption.
+    static func reservesLine(for windows: [QuotaSummary.Window]) -> Bool {
+        windows.contains { window in
             guard let seconds = window.windowSeconds, seconds > 0 else { return false }
             return window.resetsAt != nil
         }

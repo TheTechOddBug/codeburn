@@ -316,15 +316,14 @@ struct CapacityDockPacePresentationTests {
         #expect(lines[1] == nil)
     }
 
-    @Test("The panel reserves a slot on metadata, independent of wall-clock time")
+    @Test("The panel reserves a slot on metadata, independent of time and connection")
     func reservationIsMetadataOnly() {
         let resetsAt = f.now.addingTimeInterval(3 * 24 * 3600)
         let eligible = [QuotaSummary.Window(label: "Weekly", percent: 0.5, resetsAt: resetsAt, windowSeconds: f.week, fetchedAt: f.now)]
         let noDuration = [QuotaSummary.Window(label: "Weekly", percent: 0.5, resetsAt: resetsAt, fetchedAt: f.now)]
         let noReset = [QuotaSummary.Window(label: "Weekly", percent: 0.5, resetsAt: nil, windowSeconds: f.week, fetchedAt: f.now)]
-        #expect(QuotaPacePresentation.reservesLine(for: eligible, connection: .connected))
-        #expect(!QuotaPacePresentation.reservesLine(for: noDuration, connection: .connected))
-        #expect(!QuotaPacePresentation.reservesLine(for: noReset, connection: .connected))
-        #expect(!QuotaPacePresentation.reservesLine(for: eligible, connection: .stale))
+        #expect(QuotaPacePresentation.reservesLine(for: eligible))
+        #expect(!QuotaPacePresentation.reservesLine(for: noDuration))
+        #expect(!QuotaPacePresentation.reservesLine(for: noReset))
     }
 }

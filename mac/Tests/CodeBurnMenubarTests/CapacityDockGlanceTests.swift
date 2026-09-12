@@ -85,7 +85,7 @@ struct CapacityDockGlanceTests {
         #expect(CapacityDockGlance.windows(quota([])).isEmpty)
     }
 
-    @Test("Pace slots reserve height only for connected windows with a validated duration")
+    @Test("Pace slots reserve height for any window with a validated duration")
     func paceSlotReservedByDuration() {
         let resetsAt = Date().addingTimeInterval(3 * 24 * 3600)
         let withoutDuration = [window("5-hour", 0.2, resetsAt: resetsAt), window("Weekly", 0.5, resetsAt: resetsAt)]
@@ -99,9 +99,17 @@ struct CapacityDockGlanceTests {
         #expect(CapacityDockGlance.windowsHeight(for: quota(withoutDuration)) == CapacityDockGlance.windowsHeight)
         let step = CapacityDockGlance.paceLineGap + CapacityDockGlance.paceLineHeight
         #expect(CapacityDockGlance.windowsHeight(for: quota(withDuration)) == CapacityDockGlance.windowsHeight + step)
-        // Stale data carries the durations but no defensible estimate, so the
-        // slot is not reserved and the panel is shorter.
-        #expect(!CapacityDockGlance.drawsPace(quota(withDuration, connection: .stale)))
+        // Stale and loading data carry the durations but no defensible
+        // estimate. The slot stays reserved anyway: it is the caption that
+        // goes quiet, and the panel must not resize under the pointer every
+        // time a refresh starts or a sample ages out.
+        for connection in [QuotaSummary.Connection.stale, .loading] {
+            #expect(CapacityDockGlance.drawsPace(quota(withDuration, connection: connection)))
+            #expect(
+                CapacityDockGlance.windowsHeight(for: quota(withDuration, connection: connection))
+                    == CapacityDockGlance.windowsHeight(for: quota(withDuration))
+            )
+        }
         // The computed panel height reflects the reserved slot.
         func detailHeight(_ windows: [QuotaSummary.Window], connection: QuotaSummary.Connection) -> CGFloat {
             CapacityDockMetrics.detailHeight(

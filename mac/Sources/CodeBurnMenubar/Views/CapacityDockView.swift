@@ -165,7 +165,7 @@ enum CapacityDockGlance {
         guard drawsWindows(quota) else { return false }
         let shown = windows(quota)
         guard !shown.isEmpty else { return false }
-        return QuotaPacePresentation.reservesLine(for: shown, connection: quota.connection)
+        return QuotaPacePresentation.reservesLine(for: shown)
     }
 
     /// The windows row's height for this quota: the plain row, or the row with
@@ -1333,7 +1333,9 @@ struct CapacityDockDetailView: View {
                 .font(.system(size: 10))
                 .foregroundStyle(Color.capacityDockText.opacity(0.52))
         case .stale:
-            Text("Last known usage · refreshing")
+            Text(store.quotaRefreshIsInFlight(for: provider)
+                ? "Last known usage · refreshing"
+                : "Last known usage")
                 .font(.system(size: 10))
                 .foregroundStyle(.yellow.opacity(0.82))
         case .transientFailure:

@@ -1956,7 +1956,7 @@ private struct GenericProviderConnectionSections: View {
         switch summary.connection {
         case .connected: return "Connected"
         case .loading: return "Connecting…"
-        case .stale: return "Refreshing…"
+        case .stale: return store.quotaRefreshIsInFlight(for: provider) ? "Refreshing…" : "Connected"
         case .transientFailure: return "Retrying"
         case .terminalFailure: return "Reconnect required"
         case .disconnected: return "Not connected"

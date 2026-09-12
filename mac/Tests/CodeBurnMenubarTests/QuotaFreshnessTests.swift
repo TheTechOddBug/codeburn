@@ -202,6 +202,32 @@ struct QuotaFreshnessTests {
         await gate.close()
     }
 
+    @Test("an aged-out sample is not called refreshing unless a fetch is in flight")
+    func staleWithoutAFetchIsNotRefreshing() async {
+        let gate = CodexRefreshGate()
+        let store = AppStore()
+        store.codexUsage = codexUsage(fetchedAt: Date().addingTimeInterval(-QuotaSummary.freshnessThreshold - 1))
+        store.codexLoadState = .loaded
+        #expect(store.quotaSummary(for: .codex)?.connection == .stale)
+        // Manual cadence never refreshes, so this state is permanent.
+        #expect(store.quotaRefreshIsInFlight(for: .codex) == false)
+
+        store.codexQuotaBootstrapChecker = { true }
+        store.codexQuotaFetcher = { try await gate.wait() }
+        let refresh = Task { await store.refreshCodexReportingSuccess() }
+        guard await waitForWaiterCount(gate, 1) else {
+            await gate.close()
+            _ = await refresh.value
+            #expect(Bool(false), "refresh did not enter the controlled fetch")
+            return
+        }
+        #expect(store.quotaRefreshIsInFlight(for: .codex))
+        await gate.release(.success(nil))
+        _ = await refresh.value
+        #expect(store.quotaRefreshIsInFlight(for: .codex) == false)
+        await gate.close()
+    }
+
     @Test("a cancelled refresh restores the prior state instead of reporting failure")
     func cancelledRefreshRestoresPriorState() async {
         let store = AppStore()

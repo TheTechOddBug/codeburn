@@ -2342,6 +2342,19 @@ final class AppStore {
         return nil
     }
 
+    /// Whether a quota fetch for this provider is actually awaiting a response.
+    /// Claude and Codex now read `.stale` on sample age alone, which a manual
+    /// refresh cadence makes permanent, so the surfaces that say "refreshing"
+    /// have to ask. Every other provider still reaches `.stale` only from an
+    /// in-flight or just-failed fetch.
+    func quotaRefreshIsInFlight(for provider: CapacityDockProvider) -> Bool {
+        switch provider.legacyFilter {
+        case .claude: claudeRefreshInFlightRequest != nil
+        case .codex: codexRefreshInFlightRequest != nil
+        default: true
+        }
+    }
+
     func capacityDockProviderIsConnected(_ provider: CapacityDockProvider) -> Bool {
         guard let connection = capacityDockQuotaSummary(for: provider)?.connection else { return false }
         return connection == .connected || connection == .stale
