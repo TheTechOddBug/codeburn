@@ -658,3 +658,30 @@
 "%lld-day" = "%lld 天";
 "%lld-hour" = "%lld 小时";
 "<1m" = "<1 分";
+
+/* MARK: Early quota reset (#725) */
+"%@ quota reset early" = "%@ 配额已提前重置";
+"%@ quota cleared early" = "%@ 配额已提前清零";
+"You're back to %lld%%." = "你已恢复到 %lld%%。";
+"%@'s %@ reset %@ early. %@" = "%@ 的%@提前 %@ 重置。%@";
+"%@ cleared your %@ %@ before its reset. %@" = "%@ 在重置前 %@ 清空了你的%@。%@";
+"%@ reset %@ early" = "%@提前 %@ 重置";
+"%@ cleared, %@ before reset" = "%@已清空，比重置提前 %@";
+"%lld%% of it was available when CodeBurn noticed." = "CodeBurn 发现时其中有 %lld%% 可用。";
+"%@ reset this %@ %@ before its scheduled time. %@" = "%@ 比预定时间提前 %@ 重置了这个%@。%@";
+"%@ cleared this %@ %@ before the window's scheduled reset, which has not moved. %@" = "%@ 在该窗口的预定重置时间前 %@ 清空了这个%@，而重置时间并未改变。%@";
+"Last %@ reset came ~%@ early" = "上次%@重置提前了约 %@";
+"Last %lld %@ resets came ~%@ early" = "最近 %lld 次%@重置提前了约 %@";
+"%lld of the last %lld %@ resets came ~%@ early" = "最近 %lld/%lld 次%@重置提前了约 %@";
+"%lldh" = "%lld 小时";
+"5-hour limit" = "5 小时限额";
+"weekly limit" = "每周限额";
+"Opus weekly limit" = "Opus 每周限额";
+"Sonnet weekly limit" = "Sonnet 每周限额";
+"weekly" = "每周";
+"Opus weekly" = "Opus 每周";
+"Sonnet weekly" = "Sonnet 每周";
+"5-hour usage" = "5 小时用量";
+"weekly usage" = "每周用量";
+"Opus weekly usage" = "Opus 每周用量";
+"Sonnet weekly usage" = "Sonnet 每周用量";

@@ -666,3 +666,30 @@
 "%lld-day" = "%lld-day";
 "%lld-hour" = "%lld-hour";
 "<1m" = "<1m";
+
+/* MARK: Early quota reset (#725) */
+"%@ quota reset early" = "%@ quota reset early";
+"%@ quota cleared early" = "%@ quota cleared early";
+"You're back to %lld%%." = "You're back to %lld%%.";
+"%@'s %@ reset %@ early. %@" = "%@'s %@ reset %@ early. %@";
+"%@ cleared your %@ %@ before its reset. %@" = "%@ cleared your %@ %@ before its reset. %@";
+"%@ reset %@ early" = "%@ reset %@ early";
+"%@ cleared, %@ before reset" = "%@ cleared, %@ before reset";
+"%lld%% of it was available when CodeBurn noticed." = "%lld%% of it was available when CodeBurn noticed.";
+"%@ reset this %@ %@ before its scheduled time. %@" = "%@ reset this %@ %@ before its scheduled time. %@";
+"%@ cleared this %@ %@ before the window's scheduled reset, which has not moved. %@" = "%@ cleared this %@ %@ before the window's scheduled reset, which has not moved. %@";
+"Last %@ reset came ~%@ early" = "Last %@ reset came ~%@ early";
+"Last %lld %@ resets came ~%@ early" = "Last %lld %@ resets came ~%@ early";
+"%lld of the last %lld %@ resets came ~%@ early" = "%lld of the last %lld %@ resets came ~%@ early";
+"%lldh" = "%lldh";
+"5-hour limit" = "5-hour limit";
+"weekly limit" = "weekly limit";
+"Opus weekly limit" = "Opus weekly limit";
+"Sonnet weekly limit" = "Sonnet weekly limit";
+"weekly" = "weekly";
+"Opus weekly" = "Opus weekly";
+"Sonnet weekly" = "Sonnet weekly";
+"5-hour usage" = "5-hour usage";
+"weekly usage" = "weekly usage";
+"Opus weekly usage" = "Opus weekly usage";
+"Sonnet weekly usage" = "Sonnet weekly usage";
