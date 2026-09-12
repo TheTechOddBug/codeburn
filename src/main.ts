@@ -11,7 +11,8 @@ import { getProvider } from './providers/index.js'
 import { getClaudeConfigDirs, getDesktopSessionsDirs } from './providers/claude.js'
 import { convertCost, formatCost } from './currency.js'
 import { renderStatusBar } from './format.js'
-import { DAILY_CACHE_VERSION, toDateString } from './daily-cache.js'
+import { toDateString } from './daily-cache.js'
+import { statusSnapshotSemanticKey } from './status-snapshot-semantic.js'
 import { dateKey } from './day-aggregator.js'
 import { sessionModelBillableOutputTokens } from './session-output.js'
 import { isBehavioralCall } from './behavioral-weight.js'
@@ -54,20 +55,10 @@ import { createRequire } from 'node:module'
 
 const require = createRequire(import.meta.url)
 const { version } = require('../package.json')
-// Bump when the menubar payload's rendering semantics change without a package
-// release or daily-cache version change. The envelope version in session-cache
-// protects record shape; this protects the meaning of an otherwise valid one.
-// v5: providerDetails carries per-provider tokens and sessions, which a v4
-// record predates — the dock glance would read a provider as having no token
-// breakdown purely because the snapshot was written before this build.
-// v6: sessionCountBasis is now part of payload meaning. A same-package v5
-// snapshot written before that field existed still matches the v5 semantic
-// key; omitting it makes empty identity-0 read as undefined-0 ("unavailable")
-// and nonempty exact counts as a bound. Daily and session cache versions stay
-// put: retained unknown accounting must remain a partial bound, not be
-// discarded to regain exact labels.
-const STATUS_SNAPSHOT_RENDER_VERSION = 6
-const STATUS_SNAPSHOT_SEMANTIC_KEY = `${version}:render-${STATUS_SNAPSHOT_RENDER_VERSION}:daily-${DAILY_CACHE_VERSION}`
+// The snapshot semantic revision + key live in their own module so the CLI's
+// snapshot read/write path and its regression tests agree on the same value
+// without importing the CLI entry point (which parses argv as a side effect).
+const STATUS_SNAPSHOT_SEMANTIC_KEY = statusSnapshotSemanticKey(version)
 import { loadCurrency, getCurrency, isValidCurrencyCode } from './currency.js'
 import { sessionCountIsExact } from './session-count-label.js'
 import { CodexThroughputReader, newestCodexSession, renderCodexThroughput } from './codex-throughput.js'

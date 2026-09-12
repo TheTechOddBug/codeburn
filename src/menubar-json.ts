@@ -96,6 +96,15 @@ export type ProviderCost = {
   /** Provider-scoped session count for the period, absent under the same rule. */
   sessions?: number
   sessionCountBasis?: SessionCountBasis
+  /** Provider-scoped prompt-cache read tokens for the period, absent under the
+   *  same rule: no day in the period reported cache reads for this provider,
+   *  so a consumer must render unknown rather than zero. Distinct from fresh
+   *  input (never double-counted into it) and priced inside `cost`. */
+  cacheReadTokens?: number
+  /** Internal accounting flag, never emitted: true when some active day slice
+   *  lacked the cache field, so `cacheReadTokens` is a partial sum that must
+   *  be dropped rather than labelled complete. */
+  cacheReadIncomplete?: boolean
 }
 import type { OptimizeResult } from './optimize.js'
 import { getCurrency } from './currency.js'
@@ -291,10 +300,10 @@ export type MenubarPayload = {
     /// provider name (round-trips as `--provider`), `label` the display name,
     /// and `hasUsage` the period-activity signal used by provider pickers.
     /// The `providers` map keys stay lowercased display names for compatibility.
-    /// `inputTokens`, `outputTokens` and `sessions` are add-only and optional:
-    /// they are omitted when the period carries no per-provider breakdown for
-    /// them, so a consumer must render the absence rather than substitute a
-    /// period-wide figure.
+    /// `inputTokens`, `outputTokens`, `sessions` and `cacheReadTokens` are
+    /// add-only and optional: they are omitted when the period carries no
+    /// per-provider breakdown for them, so a consumer must render the absence
+    /// rather than substitute a period-wide figure.
     providerDetails: Array<{
       id: string
       label: string
@@ -305,6 +314,7 @@ export type MenubarPayload = {
       outputTokens?: number
       sessions?: number
       sessionCountBasis?: SessionCountBasis
+      cacheReadTokens?: number
     }>
     topProjects: Array<{
       /// Stable identity (abs cwd when known). Optional so older PeriodData
@@ -531,6 +541,7 @@ function buildProviderDetails(providers: ProviderCost[]): MenubarPayload['curren
       ...(p.outputTokens === undefined ? {} : { outputTokens: p.outputTokens }),
       ...(p.sessions === undefined ? {} : { sessions: p.sessions }),
       ...(p.sessionCountBasis ? { sessionCountBasis: p.sessionCountBasis } : {}),
+      ...(p.cacheReadTokens === undefined || p.cacheReadIncomplete ? {} : { cacheReadTokens: p.cacheReadTokens }),
     }))
 }
 
