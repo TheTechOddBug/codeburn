@@ -833,6 +833,8 @@ describe('project filter', () => {
       expect(calls[0]).toEqual(['sessions', '--format', 'json', '--period', 'week', '--project=my-company', '--exclude=scratch'])
       await handlers['codeburn:getSessionsContributions']!('week', 'all')
       expect(calls[1]).toEqual(['sessions', '--format', 'json', '--contributions', '--period', 'week', '--project=my-company', '--exclude=scratch'])
+      await handlers['codeburn:getBranchSpend']!('week', 'all')
+      expect(calls[2]).toEqual(['spend', '--format', 'branch-json', '--period', 'week', '--project=my-company', '--exclude=scratch'])
     })
   })
 

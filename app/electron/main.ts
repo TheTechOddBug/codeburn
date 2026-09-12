@@ -576,7 +576,10 @@ export function createBridgeHandlers(deps: Deps = { spawnCli, spawnCliAction, re
     // Spend "By branch" lens: spend per canonical project × branch (plus
     // coverage for sources without branch metadata).
     'codeburn:getBranchSpend': run((period: string, provider: string, range?: DateRange) => [
-      'spend', '--format', 'branch-json', '--period', vPeriod(period), ...providerArgs(vProvider(provider)), ...rangeArgs(vRange(range)),
+      'spend', '--format', 'branch-json', '--period', vPeriod(period),
+      ...providerArgs(vProvider(provider)),
+      ...projectArgs(),
+      ...rangeArgs(vRange(range)),
     ], 3),
     'codeburn:getOptimizeReport': run((period: string, provider: string, range?: DateRange) => [
       'optimize', '--format', 'json', '--period', vPeriod(period),
