@@ -643,13 +643,13 @@
 
 /* MARK: Quota pace captions (#1267) */
 "Limit reached" = "限额已用尽";
-"This window's limit is fully used. It resets in %@." = "该窗口的限额已全部用完，将在 %@ 后重置。";
+"This window's limit is fully used. It resets in %@." = "该窗口的限额已全部用完，将在 %@后重置。";
 "On pace" = "符合节奏";
 "Lasts until reset" = "可支撑到重置";
 "Won't last until reset" = "撑不到重置";
-"Runs out in %@" = "%@ 后耗尽";
-"Estimated from the average pace across this whole %@ window so far — not a measured recent rate." = "根据整个 %@ 窗口至今的平均速度估算，而非最近实测的速率。";
-"At that pace the limit is reached in %@, before the reset in %@." = "按此速度，限额将在 %@ 后用尽，早于 %@ 后的重置。";
+"Runs out in %@" = "%@后耗尽";
+"Estimated from the average pace across this whole %@ window so far — not a measured recent rate." = "根据整个 %@窗口至今的平均速度估算，而非最近实测的速率。";
+"At that pace the limit is reached in %@, before the reset in %@." = "按此速度，限额将在 %@后用尽，早于 %@后的重置。";
 "Projected %lld%% used by the reset — on pace." = "预计到重置时将用掉 %lld%% — 符合节奏。";
 "Projected %d%% used by the reset, %.0f%% ahead of the pace the elapsed window implies." = "预计到重置时将用掉 %d%%，比已过窗口所对应的节奏超出 %.0f%%。";
 "Projected %d%% used by the reset, %.0f%% of the window still in reserve." = "预计到重置时将用掉 %d%%，该窗口还有 %.0f%% 的结余。";
@@ -663,13 +663,13 @@
 "%@ quota reset early" = "%@ 配额已提前重置";
 "%@ quota cleared early" = "%@ 配额已提前清零";
 "You're back to %lld%%." = "你已恢复到 %lld%%。";
-"%@'s %@ reset %@ early. %@" = "%@ 的%@提前 %@ 重置。%@";
-"%@ cleared your %@ %@ before its reset. %@" = "%@ 在重置前 %@ 清空了你的%@。%@";
-"%@ reset %@ early" = "%@提前 %@ 重置";
+"%@'s %@ reset %@ early. %@" = "%@ 的%@提前 %@重置。%@";
+"%@ cleared your %@ %@ before its reset. %@" = "%@ 清空了你的%@，比其重置提前 %@。%@";
+"%@ reset %@ early" = "%@提前 %@重置";
 "%@ cleared, %@ before reset" = "%@已清空，比重置提前 %@";
 "%lld%% of it was available when CodeBurn noticed." = "CodeBurn 发现时其中有 %lld%% 可用。";
-"%@ reset this %@ %@ before its scheduled time. %@" = "%@ 比预定时间提前 %@ 重置了这个%@。%@";
-"%@ cleared this %@ %@ before the window's scheduled reset, which has not moved. %@" = "%@ 在该窗口的预定重置时间前 %@ 清空了这个%@，而重置时间并未改变。%@";
+"%@ reset this %@ %@ before its scheduled time. %@" = "%@ 将这个%@提前 %@ 重置，早于其预定时间。%@";
+"%@ cleared this %@ %@ before the window's scheduled reset, which has not moved. %@" = "%@ 清空了这个%@，比该窗口的预定重置时间早 %@，而重置时间并未改变。%@";
 "Last %@ reset came ~%@ early" = "上次%@重置提前了约 %@";
 "Last %lld %@ resets came ~%@ early" = "最近 %lld 次%@重置提前了约 %@";
 "%lld of the last %lld %@ resets came ~%@ early" = "最近 %lld/%lld 次%@重置提前了约 %@";
@@ -689,12 +689,12 @@
 /* MARK: Codex banked limit resets (#725) */
 "%lld available" = "%lld 个可用";
 "%lld usable now" = "%lld 个现在可用";
-"next %@ lands %@" = "下一次%@将于 %@ 到账";
-"latest %@ granted %@" = "最近一次%@于 %@ 发放";
-"next expires %@" = "下一个将于 %@ 过期";
-"A %@ lands %@." = "一次%@将于 %@ 到账。";
-"A %@ was added to your account %@." = "%@ 已于 %@ 添加到你的账户。";
-"A %@ was added to your account." = "%@ 已添加到你的账户。";
+"next %@ lands %@" = "下一次%@将于 %@到账";
+"latest %@ granted %@" = "最近一次%@于 %@发放";
+"next expires %@" = "下一个将于 %@过期";
+"A %@ lands %@." = "一次%@将于 %@到账。";
+"A %@ was added to your account %@." = "%@已于 %@添加到你的账户。";
+"A %@ was added to your account." = "%@已添加到你的账户。";
 "You have %lld available to use." = "你有 %lld 个可以使用。";
 "Codex banked a limit reset" = "Codex 存入了一次限额重置";
 "limit reset" = "限额重置";
